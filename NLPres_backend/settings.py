@@ -43,6 +43,10 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'dj_rest_auth.registration',
+    "project.apps.ProjectConfig",
+    "label.apps.LabelConfig",
+    "document.apps.DocumentConfig",
+    "annotation.apps.AnnotationConfig"
 ]
 
 SITE_ID = 1
