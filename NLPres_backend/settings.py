@@ -48,13 +48,14 @@ INSTALLED_APPS = [
     "project.apps.ProjectConfig",
     "label.apps.LabelConfig",
     "document.apps.DocumentConfig",
-    "annotation.apps.AnnotationConfig"
+    "annotation.apps.AnnotationConfig",
+    "userprofile.apps.UserprofileConfig"
 ]
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'dj_rest_auth.jwt_auth.JWTCookieAuthentication',
-    )
+    ),
 }
 
 SIMPLE_JWT = {
@@ -84,6 +85,7 @@ CORS_ALLOWED_ORIGINS = [
 REST_AUTH = {
     "USE_JWT": True,
     'JWT_AUTH_COOKIE': 'nlpres-auth',
+    'USER_DETAILS_SERIALIZER': 'userprofile.serializers.UserSerializer',
 }
 
 ROOT_URLCONF = 'NLPres_backend.urls'
@@ -110,9 +112,9 @@ EMAIL_HOST_USER = '474145c7c9e25c'
 EMAIL_HOST_PASSWORD = '35eeb66b8f0dec'
 EMAIL_PORT = '2525'
 ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_MAX_EMAIL_ADDRESSES = 1
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
-ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
-ACCOUNT_EMAIL_VERIFICATION_BY_CODE_ENABLED = True
+ACCOUNT_EMAIL_VERIFICATION = 'optional'
 
 AUTHENTICATION_BACKENDS = [
     # Needed to login by username in Django admin, regardless of `allauth`
