@@ -5,14 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ea197d91-3187-47b7-8ebd-4b9ca507441d" name="Changes" comment="first commit">
-      <change afterPath="$PROJECT_DIR$/userprofile/migrations/0001_initial.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/userprofile/migrations/0002_userprofile_category_alter_userprofile_avatar.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/userprofile/migrations/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/userprofile/serializer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/NLPres_backend/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/NLPres_backend/settings.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirement.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirement.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/account/email/email_confirmation_message.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/account/email/email_confirmation_message.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -126,7 +119,7 @@
       <option name="presentableId" value="Default" />
       <updated>1728316598491</updated>
       <workItem from="1728316603115" duration="16022000" />
-      <workItem from="1728482882158" duration="25318000" />
+      <workItem from="1728482882158" duration="25938000" />
     </task>
     <task id="LOCAL-00001" summary="first commit">
       <option name="closed" value="true" />
