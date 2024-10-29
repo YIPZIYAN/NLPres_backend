@@ -9,7 +9,7 @@ from project.serializers import ProjectSerializer
 
 @api_view(['GET'])
 def index(request):
-    return Response(ProjectSerializer(Project.objects.all(), many=True).data)
+    return Response(ProjectSerializer(Project.objects.filter(collaborator__user=request.user), many=True).data)
 
 @api_view(['POST'])
 def create(request):
