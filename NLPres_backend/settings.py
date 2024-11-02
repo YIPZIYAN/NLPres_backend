@@ -79,14 +79,17 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
+    "http://localhost:3001",
 ]
 
 REST_AUTH = {
     "USE_JWT": True,
     'JWT_AUTH_COOKIE': 'nlpres-auth',
     'USER_DETAILS_SERIALIZER': 'userprofile.serializers.UserSerializer',
+    'REGISTER_SERIALIZER': 'userprofile.serializers.CustomRegisterSerializer',
 }
+
+AUTH_USER_MODEL = 'userprofile.CustomUser'
 
 ROOT_URLCONF = 'NLPres_backend.urls'
 
@@ -135,7 +138,7 @@ DATABASES = {
         "HOST": "localhost",
         "NAME": "nlpres",
         "USER": "postgres",
-        "PASSWORD": "",
+        "PASSWORD": "password",
     }
 }
 
