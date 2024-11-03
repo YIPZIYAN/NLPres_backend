@@ -8,6 +8,7 @@ from userprofile.serializers import UserSerializer, ChangePasswordSerializer
 
 
 @api_view(['PUT'])
+@permission_classes([IsAuthenticated])
 def update_profile(request):
     serializer = UserSerializer(request.user, data=request.data, partial=True)
     if serializer.is_valid():
