@@ -6,19 +6,15 @@ from userprofile.models import CustomUser
 
 
 class UserSerializer(UserDetailsSerializer):
-    category = serializers.CharField(allow_null=True, required=False)
     avatar = serializers.ImageField(allow_null=True, required=False)
 
     class Meta(UserDetailsSerializer.Meta):
         model = CustomUser
-        fields = UserDetailsSerializer.Meta.fields + ('category', 'avatar')
+        fields = UserDetailsSerializer.Meta.fields + ('avatar',)
 
     def update(self, instance, validated_data):
-        category = validated_data.pop('category', None)
         avatar = validated_data.pop('avatar', None)
 
-        if category is not None:
-            instance.category = category
         if avatar is not None:
             instance.avatar = avatar
 
@@ -42,3 +38,30 @@ class CustomRegisterSerializer(RegisterSerializer):
         user = super().save(request)
 
         return user
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    current_password = serializers.CharField(required=True, write_only=True)
+    new_password = serializers.CharField(required=True, write_only=True)
+    confirm_password = serializers.CharField(required=True, write_only=True)
+
+    def validate_current_password(self, value):
+        if not self.instance.check_password(value):
+            raise serializers.ValidationError("Current password is incorrect.")
+        return value
+
+    def validate(self, data):
+        new_password = data.get('new_password')
+        confirm_password = data.get('confirm_password')
+        if new_password != confirm_password:
+            raise serializers.ValidationError("New passwords do not match.")
+
+        if self.instance.check_password(new_password):
+            raise serializers.ValidationError("New password cannot be the same as the current password.")
+
+        return data
+
+    def save(self):
+        self.instance.set_password(self.validated_data['new_password'])
+        self.instance.save()
+        return self.instance

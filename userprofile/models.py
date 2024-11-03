@@ -4,7 +4,6 @@ from django.db import models
 
 class CustomUser(AbstractUser):
     email = models.EmailField(unique=True)
-    category = models.CharField(max_length=100, null=True)
     avatar = models.ImageField(upload_to='avatars', null=True)
 
     class Meta:
