@@ -21,3 +21,7 @@ class Collaborator(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     role = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'collaborators'
+        unique_together = ('user', 'project')

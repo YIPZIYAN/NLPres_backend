@@ -26,8 +26,12 @@ urlpatterns = [
                   path('admin/', admin.site.urls),
                   path('api/auth/', include('dj_rest_auth.urls')),
                   path('api/auth/register/', include('dj_rest_auth.registration.urls')),
-                  path('api/auth/registration/account-confirm-email/', VerifyEmailView.as_view(),
-                       name='account_email_verification_sent'),
+                  path('api/auth/registration/account-confirm-email/', VerifyEmailView.as_view(),name='account_email_verification_sent'),
+
                   path('api/profile/change-password/', userprofile.views.change_password, name='change_password'),
                   path('api/profile/update/', userprofile.views.update_profile, name='update_profile'),
-              ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+                  path('api/project/', include('project.urls')),
+
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
