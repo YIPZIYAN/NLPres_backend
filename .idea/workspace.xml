@@ -5,11 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ea197d91-3187-47b7-8ebd-4b9ca507441d" name="Changes" comment="first commit">
-      <change afterPath="$PROJECT_DIR$/document/serializers.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/document/urls.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/userprofile/urls.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/NLPres_backend/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/NLPres_backend/urls.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/document/serializers.py" beforeDir="false" afterPath="$PROJECT_DIR$/document/serializers.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/document/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/document/urls.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/document/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/document/views.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -129,7 +127,7 @@
       <workItem from="1728316603115" duration="16022000" />
       <workItem from="1728482882158" duration="35299000" />
       <workItem from="1731058275486" duration="3171000" />
-      <workItem from="1731311645665" duration="16776000" />
+      <workItem from="1731311645665" duration="22603000" />
     </task>
     <task id="LOCAL-00001" summary="first commit">
       <option name="closed" value="true" />

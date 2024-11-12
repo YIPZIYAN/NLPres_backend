@@ -2,16 +2,23 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from document.serializers import DocumentSerializer
+
+from document.models import Document
+from document.serializers import DocumentSerializer, ImportDocumentSerializer
+from project.models import Project
+
 
 @api_view(['GET'])
-def index(request):
-    return Response(DocumentSerializer(Docu))
+@permission_classes([IsAuthenticated])
+def index(request, project_id):
+    documents = Document.objects.filter(project_id=project_id)
+    return Response(DocumentSerializer(documents, many=True).data)
+
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def import_dataset(request):
-    serializer = DocumentSerializer(data=request.data)
+def import_document(request):
+    serializer = ImportDocumentSerializer(data=request.data)
     if serializer.is_valid():
         response_data = serializer.save()
         return Response(response_data, status=status.HTTP_201_CREATED)

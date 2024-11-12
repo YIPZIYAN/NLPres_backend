@@ -7,6 +7,19 @@ from project.models import Project
 
 
 class DocumentSerializer(serializers.Serializer):
+    id = serializers.IntegerField(read_only=True)
+    text = serializers.CharField()
+    is_completed = serializers.BooleanField()
+    created_at = serializers.DateTimeField()
+    updated_at = serializers.DateTimeField()
+    project_id = serializers.PrimaryKeyRelatedField(queryset=Project.objects.all())
+
+    class Meta:
+        model = Document
+        fields = '__all__'
+
+
+class ImportDocumentSerializer(serializers.Serializer):
     file = serializers.FileField()
     project_id = serializers.PrimaryKeyRelatedField(queryset=Project.objects.all())
 
