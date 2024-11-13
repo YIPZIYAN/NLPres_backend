@@ -7,6 +7,7 @@
     <list default="true" id="ea197d91-3187-47b7-8ebd-4b9ca507441d" name="Changes" comment="first commit">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/document/serializers.py" beforeDir="false" afterPath="$PROJECT_DIR$/document/serializers.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/document/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/document/urls.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -127,7 +128,7 @@
       <workItem from="1731058275486" duration="3171000" />
       <workItem from="1731311645665" duration="22603000" />
       <workItem from="1731472488785" duration="3079000" />
-      <workItem from="1731496721131" duration="5894000" />
+      <workItem from="1731496721131" duration="8490000" />
     </task>
     <task id="LOCAL-00001" summary="first commit">
       <option name="closed" value="true" />

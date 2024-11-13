@@ -60,7 +60,7 @@ class ImportDocumentSerializer(serializers.Serializer):
                 else:
                     raise serializers.ValidationError("Unsupported file format.")
 
-        message = f"{len(created_documents)} data imported successfully from {len(files)} files."
+        message = f"{len(created_documents)} data imported successfully from {len(files)} file(s)."
         response = {
             "message": message,
             "created_documents": [
