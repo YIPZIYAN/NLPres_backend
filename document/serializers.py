@@ -20,7 +20,9 @@ class DocumentSerializer(serializers.Serializer):
 
 
 class ImportDocumentSerializer(serializers.Serializer):
-    file = serializers.FileField()
+    files = serializers.ListField(
+        child=serializers.FileField(),
+    )
     project_id = serializers.PrimaryKeyRelatedField(queryset=Project.objects.all())
 
     def create_document(self, project, lines):
@@ -38,28 +40,36 @@ class ImportDocumentSerializer(serializers.Serializer):
         return self.create_document(project, lines)
 
     def create(self, validated_data):
-        file = validated_data['file']
+        files = validated_data['files']
         project = validated_data['project_id']
-        file_name = file.name.lower()
+        created_documents = []
 
-        file_formats = {
-            '.txt': partial(self.process_txt),
-            '.json': partial(self.process_json),
+        for file in files:
+            file_name = file.name.lower()
+            file_formats = {
+                '.txt': partial(self.process_txt),
+                '.json': partial(self.process_json),
+            }
+
+            for extension, method in file_formats.items():
+                if file_name.endswith(extension):
+                    documents = method(file, project)
+                    created_documents.extend(documents)
+                    break
+
+                else:
+                    raise serializers.ValidationError("Unsupported file format.")
+
+        message = f"{len(created_documents)} data imported successfully from {len(files)} files."
+        response = {
+            "message": message,
+            "created_documents": [
+                {"id": doc.id, "text": doc.text} for doc in created_documents
+            ],
         }
+        return response
 
-        for extension, method in file_formats.items():
-            if file_name.endswith(extension):
-                created_documents = method(file, project)
-                message = f"{len(created_documents)} data imported from {file_name} successfully."
-                response = {
-                    "message": message,
-                    "created_documents": [
-                        {"id": doc.id, "text": doc.text} for doc in created_documents
-                    ],
-                }
-                return response
 
-        raise serializers.ValidationError("Unsupported file format.")
 
     def update(self, instance, validated_data):
         return instance
