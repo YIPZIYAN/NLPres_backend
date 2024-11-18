@@ -6,8 +6,9 @@
   <component name="ChangeListManager">
     <list default="true" id="ea197d91-3187-47b7-8ebd-4b9ca507441d" name="Changes" comment="first commit">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/document/serializers.py" beforeDir="false" afterPath="$PROJECT_DIR$/document/serializers.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/document/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/document/urls.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/NLPres_backend/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/NLPres_backend/settings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/userprofile/migrations/0003_alter_userprofile_avatar.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/userprofile/migrations/0004_alter_userprofile_avatar.py" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -57,7 +58,7 @@
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.pycharm.django.structure.promotion.once.per.project&quot;: &quot;true&quot;,
     &quot;django.template.preview.state&quot;: &quot;SHOW_EDITOR&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;cy&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;zy&quot;,
     &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
     &quot;last_opened_file_path&quot;: &quot;C:/Users/pc3/PycharmProjects/NLPres_backend/templates/email/account&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
@@ -110,8 +111,7 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-1d06a55b98c1-0b3e54e931b4-JavaScript-PY-241.19072.16" />
-        <option value="bundled-python-sdk-8336bb23522e-2767605e8bc2-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-241.19072.16" />
+        <option value="bundled-js-predefined-1d06a55b98c1-0b3e54e931b4-JavaScript-WS-241.18034.50" />
       </set>
     </attachedChunks>
   </component>
@@ -129,6 +129,9 @@
       <workItem from="1731311645665" duration="22603000" />
       <workItem from="1731472488785" duration="3079000" />
       <workItem from="1731496721131" duration="8490000" />
+      <workItem from="1731909892299" duration="74000" />
+      <workItem from="1731910033643" duration="369000" />
+      <workItem from="1731910616964" duration="294000" />
     </task>
     <task id="LOCAL-00001" summary="first commit">
       <option name="closed" value="true" />
