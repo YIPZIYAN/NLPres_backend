@@ -15,14 +15,24 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from dj_rest_auth.registration.views import VerifyEmailView
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
+
+import userprofile.views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/auth/', include('dj_rest_auth.urls')),
-    path('api/auth/registration/', include('dj_rest_auth.registration.urls')),
-    path('api/auth/registration/account-confirm-email/', VerifyEmailView.as_view(), name='account_email_verification_sent'),
+    path('api/auth/register/', include('dj_rest_auth.registration.urls')),
+    path('api/auth/registration/account-confirm-email/', VerifyEmailView.as_view(),name='account_email_verification_sent'),
 
-    path('api/project/',include('project.urls')),
-]
+    path('api/profile/', include('userprofile.urls')),
+
+    path('api/project/', include('project.urls')),
+
+    path('api/document/', include('document.urls')),
+
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+

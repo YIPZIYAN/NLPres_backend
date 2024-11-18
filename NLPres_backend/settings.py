@@ -15,6 +15,8 @@ from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -86,7 +88,10 @@ REST_AUTH = {
     "USE_JWT": True,
     'JWT_AUTH_COOKIE': 'nlpres-auth',
     'USER_DETAILS_SERIALIZER': 'userprofile.serializers.UserSerializer',
+    'REGISTER_SERIALIZER': 'userprofile.serializers.CustomRegisterSerializer',
 }
+
+AUTH_USER_MODEL = 'userprofile.CustomUser'
 
 ROOT_URLCONF = 'NLPres_backend.urls'
 
@@ -135,7 +140,7 @@ DATABASES = {
         "HOST": "localhost",
         "NAME": "nlpres",
         "USER": "postgres",
-        "PASSWORD": "",
+        "PASSWORD": "password",
     }
 }
 
