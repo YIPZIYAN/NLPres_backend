@@ -32,34 +32,77 @@ class ImportDocumentSerializer(serializers.Serializer):
         return documents
 
     def process_txt(self, file, project):
-        lines = [line.decode('utf-8').strip() for line in file.readlines()]
-        return self.create_document(project, lines)
+
+        lines = []
+        errors = []
+
+        for line_number, line in enumerate(file, start=1):
+            try:
+                decoded_line = line.decode('utf-8').strip()
+                if decoded_line:
+                    lines.append(decoded_line)
+
+            except UnicodeDecodeError as e:
+                errors.append({file.name: f"{str(e)} in line {line_number}."})
+
+        if not lines:
+            errors.append({file.name: "No data found."})
+
+        return self.create_document(project, lines), errors
 
     def process_json(self, file, project, key):
 
         if key is None:
             raise serializers.ValidationError({"error": ["Please fill in the key of data to be imported."]})
 
+        errors = []
+        lines = []
+
         try:
             data = json.load(file)
+            if isinstance(data, list):
+                lines = [
+                    item.get(key) for item in data
+                    if isinstance(item, dict) and item.get(key) is not None
+                ]
+            elif isinstance(data, dict):
+                lines = [data.get(key)] if data.get(key) is not None else []
+            else:
+                errors.append({file.name: "JSON must be an object or an array of objects."})
+
+            if not lines:
+                errors.append({file.name: f"No data found for the key '{key}' in the JSON file(s)."})
+
         except json.JSONDecodeError as e:
-            raise serializers.ValidationError({"error": [f"Invalid JSON file ({file.name}): {str(e)}"]})
+            errors.append({file.name: f"{str(e)}."})
 
-        if isinstance(data, list):
-            lines = [
-                item.get(key) for item in data
-                if isinstance(item, dict) and item.get(key) is not None
-            ]
-        elif isinstance(data, dict):
-            lines = [data.get(key)] if data.get(key) is not None else []
-        else:
-            raise serializers.ValidationError({"error": [f"{file.name}: JSON must be an object or an array of objects."]})
+        return self.create_document(project, lines), errors
 
-        if not lines:
-            raise serializers.ValidationError({"error": [f"No data found for the key '{key}' in the JSON file(s)."]})
+    def process_jsonl(self, file, project, key):
 
-        # lines = data if isinstance(data, list) else [data]
-        return self.create_document(project, lines)
+        if key is None:
+            raise serializers.ValidationError({"error": ["Please fill in the key of data to be imported."]})
+
+        lines = []
+        errors = []
+
+        for line_number, line in enumerate(file, start=1):
+            try:
+                data = json.loads(line.decode('utf-8'))
+                if isinstance(data, dict):
+                    value = data.get(key)
+                    if value is not None:
+                        lines.append(value)
+                    else:
+                        errors.append({file.name: f"No data found for the key '{key}' in line {line_number}."})
+
+                else:
+                    errors.append({file.name: f"Invalid JSON object in line {line_number}."})
+
+            except json.JSONDecodeError as e:
+                errors.append({file.name: f"{str(e)} in line {line_number}."})
+
+        return self.create_document(project, lines), errors
 
     def create(self, validated_data):
         files = validated_data['files']
@@ -70,7 +113,8 @@ class ImportDocumentSerializer(serializers.Serializer):
 
         file_formats = {
             '.txt': self.process_txt,
-            '.json': partial(self.process_json, key=key)
+            '.json': partial(self.process_json, key=key),
+            '.jsonl': partial(self.process_jsonl, key=key)
         }
 
         for file in files:
@@ -79,29 +123,27 @@ class ImportDocumentSerializer(serializers.Serializer):
             for extension, method in file_formats.items():
                 if file_name.endswith(extension):
                     try:
-                        documents = method(file, project)
+                        documents, file_errors = method(file, project)
                         created_documents.extend(documents)
+                        errors.extend(file_errors)
                     except serializers.ValidationError as e:
                         errors.append({file.name: e.detail})
                     break
 
             else:
-                raise serializers.ValidationError("Unsupported file format.")
+                errors.append({file.name: "Unsupported file format."})
 
         if created_documents:
             message = f"{len(created_documents)} data imported successfully from {len(files)} file(s)."
-            if errors:
-                message += f" File(s) with error have been ignored."
             response = {
                 "message": message,
                 "created_documents": [
                     {"id": doc.id, "text": doc.text} for doc in created_documents
-                ]
+                ],
+                "errors": errors
             }
         else:
-            first_error = next(iter(errors[0].values()))
-            error = first_error.get("error")[0]
-            raise serializers.ValidationError({"error": [error]})
+            raise serializers.ValidationError({"errors": errors})
 
         return response
 
