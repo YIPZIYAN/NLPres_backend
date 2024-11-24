@@ -52,9 +52,6 @@ class ImportDocumentSerializer(serializers.Serializer):
 
     def process_json(self, file, project, key):
 
-        if key is None:
-            raise serializers.ValidationError({"error": ["Please fill in the key of data to be imported."]})
-
         errors = []
         lines = []
 
@@ -79,9 +76,6 @@ class ImportDocumentSerializer(serializers.Serializer):
         return self.create_document(project, lines), errors
 
     def process_jsonl(self, file, project, key):
-
-        if key is None:
-            raise serializers.ValidationError({"error": ["Please fill in the key of data to be imported."]})
 
         lines = []
         errors = []
@@ -143,7 +137,9 @@ class ImportDocumentSerializer(serializers.Serializer):
                 "errors": errors
             }
         else:
-            raise serializers.ValidationError({"errors": errors})
+            response = {
+                "errors": errors
+            }
 
         return response
 
