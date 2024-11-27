@@ -1,7 +1,10 @@
 import csv
+import io
 import json
 from functools import partial
+from io import open
 
+from conllu import parse_incr
 from rest_framework import serializers
 from document.models import Document
 from project.models import Project
@@ -38,7 +41,8 @@ class ImportDocumentSerializer(serializers.Serializer):
             '.txt': self.process_txt,
             '.json': partial(self.process_json, key=key),
             '.jsonl': partial(self.process_jsonl, key=key),
-            '.csv': partial(self.process_csv, key=key)
+            '.csv': partial(self.process_csv, key=key),
+            '.conllu': self.process_conllu,
         }
 
         for file in files:
@@ -170,6 +174,25 @@ class ImportDocumentSerializer(serializers.Serializer):
             errors.append({file.name: f"{str(e)}"})
 
         return self.create_document(project, lines), errors
+
+    def process_conllu(self, file, project):
+
+        sentences = []
+        errors = []
+
+        try:
+            data = io.StringIO(file.read().decode("utf-8"))
+            for sentence_number, tokenlist in enumerate(parse_incr(data), start=1):
+                sentence = " ".join([token["form"] for token in tokenlist if token.get("form")])
+                if sentence:
+                    sentences.append(sentence)
+                else:
+                    errors.append({file.name: f"Line {sentence_number}: Invalid data"})
+
+        except Exception as e:
+            errors.append({file.name: str(e)})
+
+        return self.create_document(project, sentences), errors
 
     def create_document(self, project, lines):
         documents = [Document(project=project, text=line) for line in lines]
