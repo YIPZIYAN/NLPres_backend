@@ -5,10 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ea197d91-3187-47b7-8ebd-4b9ca507441d" name="Changes" comment="first commit">
+      <change afterPath="$PROJECT_DIR$/label/serializers.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/label/urls.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/NLPres_backend/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/NLPres_backend/settings.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/userprofile/migrations/0003_alter_userprofile_avatar.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/userprofile/migrations/0004_alter_userprofile_avatar.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/NLPres_backend/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/NLPres_backend/urls.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/label/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/label/views.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -111,7 +113,8 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-1d06a55b98c1-0b3e54e931b4-JavaScript-WS-241.18034.50" />
+        <option value="bundled-js-predefined-d6986cc7102b-410509235cf1-JavaScript-PY-242.20224.347" />
+        <option value="bundled-python-sdk-c2d6afa66fbe-39cff9de6eef-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-242.20224.347" />
       </set>
     </attachedChunks>
   </component>
@@ -131,7 +134,8 @@
       <workItem from="1731496721131" duration="8490000" />
       <workItem from="1731909892299" duration="74000" />
       <workItem from="1731910033643" duration="369000" />
-      <workItem from="1731910616964" duration="294000" />
+      <workItem from="1731910616964" duration="2233000" />
+      <workItem from="1732515455389" duration="9837000" />
     </task>
     <task id="LOCAL-00001" summary="first commit">
       <option name="closed" value="true" />
