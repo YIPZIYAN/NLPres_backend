@@ -5,12 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ea197d91-3187-47b7-8ebd-4b9ca507441d" name="Changes" comment="first commit">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/NLPres_backend/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/NLPres_backend/settings.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/label/serializers.py" beforeDir="false" afterPath="$PROJECT_DIR$/label/serializers.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/label/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/label/urls.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/label/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/label/views.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/project/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/project/views.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -135,7 +130,7 @@
       <workItem from="1731909892299" duration="74000" />
       <workItem from="1731910033643" duration="369000" />
       <workItem from="1731910616964" duration="2233000" />
-      <workItem from="1732515455389" duration="21261000" />
+      <workItem from="1732515455389" duration="22071000" />
     </task>
     <task id="LOCAL-00001" summary="first commit">
       <option name="closed" value="true" />
