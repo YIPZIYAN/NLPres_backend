@@ -3,6 +3,7 @@ import io
 import json
 from functools import partial
 from conllu import parse_incr
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from document.models import Document
 from project.models import Project
@@ -25,16 +26,15 @@ class ImportDocumentSerializer(serializers.Serializer):
     files = serializers.ListField(
         child=serializers.FileField(),
     )
-    project_id = serializers.PrimaryKeyRelatedField(queryset=Project.objects.all())
     key = serializers.CharField(required=False, allow_null=True)
 
     def create(self, validated_data):
         files = validated_data['files']
-        project = validated_data['project_id']
+        project_id = self.context.get('project_id')
         key = validated_data['key']
+
         created_documents = []
         errors = []
-
         file_formats = {
             '.txt': self.process_txt,
             '.json': partial(self.process_json, key=key),
@@ -42,6 +42,11 @@ class ImportDocumentSerializer(serializers.Serializer):
             '.csv': partial(self.process_csv, key=key),
             '.conllu': self.process_conllu,
         }
+
+        if not project_id:
+            raise serializers.ValidationError({"project_id": "This field is required."})
+
+        project = get_object_or_404(Project, id=project_id)
 
         for file in files:
             file_name = file.name.lower()

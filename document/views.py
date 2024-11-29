@@ -15,8 +15,8 @@ def index(request, project_id):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def import_document(request):
-    serializer = ImportDocumentSerializer(data=request.data)
+def create(request, project_id):
+    serializer = ImportDocumentSerializer(data=request.data, context={'project_id': project_id})
     if serializer.is_valid():
         response_data = serializer.save()
         return Response(response_data, status=status.HTTP_201_CREATED)
