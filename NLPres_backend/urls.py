@@ -34,5 +34,7 @@ urlpatterns = [
 
     path('api/document/', include('document.urls')),
 
+    path('api/converter/', include('converter.urls')),
+
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

@@ -2,8 +2,6 @@ import csv
 import io
 import json
 from functools import partial
-from io import open
-
 from conllu import parse_incr
 from rest_framework import serializers
 from document.models import Document
