@@ -32,6 +32,8 @@ urlpatterns = [
 
     path('api/project/', include('project.urls')),
 
+    path('api/project/<int:project_id>/label/',include('label.urls')),
+
     path('api/document/', include('document.urls')),
 
     path('api/converter/', include('converter.urls')),
