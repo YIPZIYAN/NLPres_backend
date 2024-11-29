@@ -16,13 +16,15 @@ class LabelSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'color']
 
     def create(self, validated_data):
-        # Get the project_id from the context
         project_id = self.context.get('project_id')
         if not project_id:
             raise serializers.ValidationError({"project_id": "This field is required."})
 
-        # Fetch the Project instance or raise a 404 if not found
         project = get_object_or_404(Project, id=project_id)
-
-        # Create the Label instance
         return Label.objects.create(project=project, **validated_data)
+
+    def update(self, instance, validated_data):
+        instance.name = validated_data.get('name', instance.name)
+        instance.color = validated_data.get('color', instance.color)
+        instance.save()
+        return instance
