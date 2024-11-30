@@ -1,22 +1,71 @@
+import csv
 import json
+import zipfile
+from io import BytesIO
 
 from rest_framework import serializers
 
 
 class ConverterSerializer(serializers.Serializer):
-    file = serializers.FileField()
-    output_format = serializers.ChoiceField(choices=['json', 'jsonl', 'csv', 'conllu'])
-
-    def process_file(self, file, output_format):
-        try:
-            content = file.read().decode('utf-8')
-            if output_format == 'json':
-                return json.dumps({"content": content.splitlines()}, indent=4), 'application/json'
-
-        except Exception as e:
-            raise serializers.ValidationError(f"Error during conversion: {str(e)}")
+    files = serializers.ListField(
+        child=serializers.FileField(),
+    )
+    file_format = serializers.ChoiceField(choices=['txt', 'jsonl', 'csv'])
+    export_as = serializers.ChoiceField(choices=['json', 'jsonl', 'csv', 'conllu'])
 
     def save(self):
-        file = self.validated_data['file']
-        output_format = self.validated_data['output_format']
-        return self.process_file(file, output_format)
+        files = self.validated_data['files']
+        file_format = self.validated_data['file_format']
+        export_as = self.validated_data['export_as']
+
+        try:
+            process_method = getattr(self, f"process_{file_format}", None)
+            if not callable(process_method):
+                raise serializers.ValidationError(f"No processor available for file format: {file_format}")
+
+            return process_method(files, export_as)
+
+        except Exception as e:
+            raise serializers.ValidationError(f"Error during file processing: {str(e)}")
+
+    def process_txt(self, files, export_as):
+        return self.process_files(files, export_as, file_reader=self.read_txt)
+
+    def process_jsonl(self, files, export_as):
+        return self.process_files(files, export_as, file_reader=self.read_jsonl)
+
+    def process_csv(self, files, export_as):
+        return self.process_files(files, export_as, file_reader=self.read_csv)
+
+    def process_files(self, files, export_as, file_reader):
+        zip_buffer = BytesIO()
+        with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
+            for file in files:
+                content = file_reader(file)
+                converted_content = self.convert(content, export_as)
+                filename = f"{file.name.split('.')[0]}.{export_as}"
+                zip_file.writestr(filename, converted_content)
+        zip_buffer.seek(0)
+        return zip_buffer, 'application/zip'
+
+    def convert(self, content, export_as):
+        convert_method = getattr(self, f"to_{export_as}", None)
+        if not callable(convert_method):
+            raise ValueError(f"Unsupported export format: {export_as}")
+
+        return convert_method(content)
+
+    # File Readers
+    def read_txt(self, file):
+        content = file.read().decode('utf-8')
+        return [{"text": line.strip()} for line in content.splitlines() if line.strip()]
+
+    def read_jsonl(self, file):
+        return [json.loads(line) for line in file.read().decode('utf-8').splitlines()]
+
+    def read_csv(self, file):
+        return list(csv.DictReader(file.read().decode('utf-8').splitlines()))
+
+    # Exporters
+    def to_json(self, content):
+        return json.dumps(content,indent=2).encode('utf-8')

@@ -10,13 +10,9 @@ from converter.serializers import ConverterSerializer
 def convert_file(request):
     serializer = ConverterSerializer(data=request.data)
     if serializer.is_valid():
-        converted_content, content_type = serializer.save()
-
-        # Prepare the response with the converted file
-        response = HttpResponse(converted_content, content_type=content_type)
-        filename = request.data['file'].name.split('.')[0]
-        response[
-            'Content-Disposition'] = f'attachment; filename="{filename}.{serializer.validated_data["output_format"]}"'
+        zip_buffer, content_type = serializer.save()
+        response = HttpResponse(zip_buffer, content_type=content_type)
+        response['Content-Disposition'] = 'attachment; filename="converted_files.zip"'
         return response
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
