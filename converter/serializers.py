@@ -18,15 +18,11 @@ class ConverterSerializer(serializers.Serializer):
         file_format = self.validated_data['file_format']
         export_as = self.validated_data['export_as']
 
-        try:
-            process_method = getattr(self, f"process_{file_format}", None)
-            if not callable(process_method):
-                raise serializers.ValidationError(f"No processor available for file format: {file_format}")
+        process_method = getattr(self, f"process_{file_format}", None)
+        if not callable(process_method):
+            raise serializers.ValidationError(f"No processor available for file format: {file_format}")
 
-            return process_method(files, export_as)
-
-        except Exception as e:
-            raise serializers.ValidationError(f"Error during file processing: {str(e)}")
+        return process_method(files, export_as)
 
     def process_txt(self, files, export_as):
         return self.process_files(files, export_as, file_reader=self.read_txt)
@@ -41,10 +37,13 @@ class ConverterSerializer(serializers.Serializer):
         zip_buffer = BytesIO()
         with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
             for file in files:
-                content = file_reader(file)
-                converted_content = self.convert(content, export_as)
-                filename = f"{file.name.split('.')[0]}.{export_as}"
-                zip_file.writestr(filename, converted_content)
+                try:
+                    content = file_reader(file)
+                    converted_content = self.convert(content, export_as)
+                    filename = f"{file.name.split('.')[0]}.{export_as}"
+                    zip_file.writestr(filename, converted_content)
+                except Exception as e:
+                    raise serializers.ValidationError(f"{file.name}: {str(e)}")
         zip_buffer.seek(0)
         return zip_buffer, 'application/zip'
 
@@ -68,4 +67,4 @@ class ConverterSerializer(serializers.Serializer):
 
     # Exporters
     def to_json(self, content):
-        return json.dumps(content,indent=2).encode('utf-8')
+        return json.dumps(content, indent=2).encode('utf-8')

@@ -26,43 +26,38 @@ class ImportDocumentSerializer(serializers.Serializer):
     files = serializers.ListField(
         child=serializers.FileField(),
     )
+    file_format = serializers.ChoiceField(choices=['txt', 'json', 'jsonl', 'csv', 'conllu'])
     key = serializers.CharField(required=False, allow_null=True)
 
     def create(self, validated_data):
         files = validated_data['files']
+        file_format = self.validated_data['file_format']
         project_id = self.context.get('project_id')
         key = validated_data['key']
 
-        created_documents = []
-        errors = []
-        file_formats = {
-            '.txt': self.process_txt,
-            '.json': partial(self.process_json, key=key),
-            '.jsonl': partial(self.process_jsonl, key=key),
-            '.csv': partial(self.process_csv, key=key),
-            '.conllu': self.process_conllu,
+        process_methods = {
+            'txt': self.process_txt,
+            'json': partial(self.process_json, key=key),
+            'jsonl': partial(self.process_jsonl, key=key),
+            'csv': partial(self.process_csv, key=key),
+            'conllu': self.process_conllu,
         }
 
         if not project_id:
             raise serializers.ValidationError({"project_id": "This field is required."})
 
         project = get_object_or_404(Project, id=project_id)
+        process_method = process_methods[file_format]
+        created_documents = []
+        errors = []
 
         for file in files:
-            file_name = file.name.lower()
-
-            for extension, method in file_formats.items():
-                if file_name.endswith(extension):
-                    try:
-                        documents, file_errors = method(file, project)
-                        created_documents.extend(documents)
-                        errors.extend(file_errors)
-                    except serializers.ValidationError as e:
-                        errors.append({file.name: e.detail})
-                    break
-
-            else:
-                errors.append({file.name: "Unsupported file format."})
+            try:
+                documents, file_errors = process_method(file, project)
+                created_documents.extend(documents)
+                errors.extend(file_errors)
+            except serializers.ValidationError as e:
+                errors.append({file.name: e.detail})
 
         if created_documents:
             message = f"{len(created_documents)} data imported successfully from {len(files)} file(s)."
