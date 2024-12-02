@@ -5,17 +5,18 @@ from functools import partial
 from conllu import parse_incr
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
+
+from annotation.serializers import AnnotationSerializer
 from document.models import Document
 from project.models import Project
-
 
 class DocumentSerializer(serializers.Serializer):
     id = serializers.IntegerField(read_only=True)
     text = serializers.CharField()
-    is_completed = serializers.BooleanField()
     created_at = serializers.DateTimeField()
     updated_at = serializers.DateTimeField()
     project_id = serializers.PrimaryKeyRelatedField(queryset=Project.objects.all())
+    annotations = AnnotationSerializer(many=True,read_only=True,source='annotation_set')
 
     class Meta:
         model = Document
