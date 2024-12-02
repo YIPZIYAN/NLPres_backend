@@ -85,9 +85,9 @@ class ConverterSerializer(serializers.Serializer):
             flattened_item = {}
             for key, value in item.items():
                 if isinstance(value, list):
-                    flattened_item[key] = ", ".join(value)
+                    flattened_item[key] = ", ".join(map(str, value))
                 else:
-                    flattened_item[key] = value
+                    flattened_item[key] = str(value) if value is not None else ""
             flattened_content.append(flattened_item)
 
         output = StringIO()
