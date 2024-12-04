@@ -5,13 +5,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ea197d91-3187-47b7-8ebd-4b9ca507441d" name="Changes" comment="first commit">
-      <change afterPath="$PROJECT_DIR$/annotation/serializers.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/annotation/urls.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/NLPres_backend/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/NLPres_backend/settings.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/annotation/migrations/0001_initial.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/annotation/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/annotation/models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/document/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/document/models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/document/serializers.py" beforeDir="false" afterPath="$PROJECT_DIR$/document/serializers.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/NLPres_backend/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/NLPres_backend/urls.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/annotation/serializers.py" beforeDir="false" afterPath="$PROJECT_DIR$/annotation/serializers.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/annotation/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/annotation/views.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/document/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/document/urls.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/document/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/document/views.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -140,7 +140,7 @@
       <workItem from="1732515455389" duration="22071000" />
       <workItem from="1733046623609" duration="1438000" />
       <workItem from="1733074608373" duration="1851000" />
-      <workItem from="1733106861826" duration="7059000" />
+      <workItem from="1733106861826" duration="21942000" />
     </task>
     <task id="LOCAL-00001" summary="first commit">
       <option name="closed" value="true" />
