@@ -1,6 +1,7 @@
 import csv
 import json
 import zipfile
+from collections import defaultdict, OrderedDict
 from io import BytesIO, TextIOWrapper, StringIO
 
 from rest_framework import serializers
@@ -64,13 +65,47 @@ class ConverterSerializer(serializers.Serializer):
         return [{"text": line.strip()} for line in content.splitlines() if line.strip()]
 
     def read_json(self, file):
-        return json.load(file)
+        data = json.load(file)
+        if isinstance(data, dict):
+            return [data]
+
+        return data
 
     def read_jsonl(self, file):
         return [json.loads(line) for line in file.read().decode('utf-8').splitlines()]
 
     def read_csv(self, file):
-        return list(csv.DictReader(file.read().decode('utf-8').splitlines()))
+        content = csv.DictReader(file.read().decode('utf-8').splitlines())
+        data = []
+
+        for row in content:
+            reconstructed_row = defaultdict(dict)
+
+            for key, value in row.items():
+                if value.isdigit():
+                    value = int(value)
+                elif value.replace('.', '', 1).isdigit():
+                    value = float(value)
+
+                # Reconstruct nested structures
+                keys = key.split('/')
+                temp = reconstructed_row
+                for part in keys[:-1]:
+                    temp = temp.setdefault(part, {})
+                temp[keys[-1]] = value
+
+            def process_lists(obj):
+                if isinstance(obj, dict):
+                    keys = list(obj.keys())
+                    if all(k.isdigit() for k in keys):
+                        return [process_lists(obj[k]) for k in sorted(obj, key=int)]
+                    else:
+                        return {k: process_lists(v) for k, v in obj.items()}
+                return obj
+
+            data.append(process_lists(reconstructed_row))
+
+        return data
 
     # File Exporters
     def to_json(self, content):
@@ -80,20 +115,37 @@ class ConverterSerializer(serializers.Serializer):
         return "\n".join(json.dumps(item) for item in content).encode('utf-8')
 
     def to_csv(self, content):
-        flattened_content = []
-        for item in content:
-            flattened_item = {}
-            for key, value in item.items():
-                if isinstance(value, list):
-                    flattened_item[key] = ", ".join(map(str, value))
-                else:
-                    flattened_item[key] = str(value) if value is not None else ""
-            flattened_content.append(flattened_item)
+
+        def flatten_json(json_obj, parent_key='', sep='/'):
+            items = []
+            if isinstance(json_obj, list):
+                # if all (isinstance(value, dict) for value in json_obj):
+                #     for value in json_obj:
+                #         items.extend(flatten_json(value, parent_key).items())
+                # else:
+                for i, value in enumerate(json_obj, 1):
+                    items.extend(flatten_json(value, f"{parent_key}{sep}{i - 1}").items())
+            elif isinstance(json_obj, dict):
+                for key, value in json_obj.items():
+                    new_key = f"{parent_key}{sep}{key}" if parent_key else key
+                    items.extend(flatten_json(value, new_key, sep=sep).items())
+            else:
+                items.append((parent_key, json_obj))
+            return dict(items)
+
+        flattened_content = [flatten_json(item) for item in content]
+
+        headers = []
+        for item in flattened_content:
+            for key in item.keys():
+                if key not in headers:
+                    headers.append(key)
 
         output = StringIO()
-        fieldnames = flattened_content[0].keys() if flattened_content else []
-        writer = csv.DictWriter(output, fieldnames=fieldnames)
-        writer.writeheader()
-        writer.writerows(flattened_content)
+        csv_writer = csv.DictWriter(output, fieldnames=headers)
+        csv_writer.writeheader()
+        csv_writer.writerows(flattened_content)
 
         return output.getvalue().encode('utf-8')
+
+
