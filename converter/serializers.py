@@ -66,10 +66,25 @@ class ConverterSerializer(serializers.Serializer):
 
     def read_json(self, file):
         data = json.load(file)
+
+        # Case 1: If the data is column-oriented JSON (keys are arrays)
         if isinstance(data, dict):
+            # Check if the values of the dictionary are lists (column-oriented format)
+            if all(isinstance(value, list) for value in data.values()):
+                return [dict(zip(data.keys(), values)) for values in zip(*data.values())]
+            # If not a column-oriented JSON, it's just a simple dictionary that needs no transformation
             return [data]
 
-        return data
+        # Case 2: If the data has a top-level "data" key, extract the list
+        if isinstance(data, dict):
+            for key, value in data.items():
+                if isinstance(value, list):
+                    return value
+
+        if isinstance(data, list):
+            return data
+
+        raise ValueError("Unsupported JSON format")
 
     def read_jsonl(self, file):
         return [json.loads(line) for line in file.read().decode('utf-8').splitlines()]
@@ -123,14 +138,20 @@ class ConverterSerializer(serializers.Serializer):
                 #     for value in json_obj:
                 #         items.extend(flatten_json(value, parent_key).items())
                 # else:
-                for i, value in enumerate(json_obj, 1):
-                    items.extend(flatten_json(value, f"{parent_key}{sep}{i - 1}").items())
+                if len(json_obj) == 0:  # Handle empty lists
+                    items.append((parent_key, ''))
+                else:
+                    for i, value in enumerate(json_obj):
+                        items.extend(flatten_json(value, f"{parent_key}{sep}{i}").items())
             elif isinstance(json_obj, dict):
                 for key, value in json_obj.items():
                     new_key = f"{parent_key}{sep}{key}" if parent_key else key
-                    items.extend(flatten_json(value, new_key, sep=sep).items())
+                    if isinstance(value, (dict, list)):
+                        items.extend(flatten_json(value, new_key, sep=sep).items())
+                    else:
+                        items.append((new_key, value if value is not None else ''))
             else:
-                items.append((parent_key, json_obj))
+                items.append((parent_key, json_obj if json_obj is not None else ''))
             return dict(items)
 
         flattened_content = [flatten_json(item) for item in content]
