@@ -51,7 +51,8 @@ INSTALLED_APPS = [
     "label.apps.LabelConfig",
     "document.apps.DocumentConfig",
     "annotation.apps.AnnotationConfig",
-    "userprofile.apps.UserprofileConfig"
+    "userprofile.apps.UserprofileConfig",
+    "evaluation.apps.EvaluationConfig"
 ]
 
 REST_FRAMEWORK = {
@@ -87,6 +88,8 @@ CORS_ALLOWED_ORIGINS = [
 REST_AUTH = {
     "USE_JWT": True,
     'JWT_AUTH_COOKIE': 'nlpres-auth',
+    "JWT_AUTH_REFRESH_COOKIE": "nlpres-refresh",
+    "JWT_AUTH_HTTPONLY": False,
     'USER_DETAILS_SERIALIZER': 'userprofile.serializers.UserSerializer',
     'REGISTER_SERIALIZER': 'userprofile.serializers.CustomRegisterSerializer',
 }
