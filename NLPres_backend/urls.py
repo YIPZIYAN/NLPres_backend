@@ -36,6 +36,10 @@ urlpatterns = [
 
     path('api/project/<int:project_id>/document/', include('document.urls')),
 
+    path('api/annotate/', include('annotation.urls')),
+
+    path('api/project/<int:project_id>/evaluate/', include('evaluation.urls')),
+
     path('api/converter/', include('converter.urls')),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
