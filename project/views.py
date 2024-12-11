@@ -15,7 +15,7 @@ def index(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create(request):
-    serializer = ProjectSerializer(data=request.data)
+    serializer = ProjectSerializer(data=request.data,context={'request': request})
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
