@@ -22,6 +22,11 @@ class DocumentSerializer(serializers.Serializer):
         model = Document
         fields = '__all__'
 
+    def update(self, instance, validated_data):
+        instance.text = validated_data.get('text', instance.text)
+        instance.save()
+        return instance
+
 
 class ImportDocumentSerializer(serializers.Serializer):
     files = serializers.ListField(
