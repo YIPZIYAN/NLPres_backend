@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -17,16 +17,21 @@ def create(request):
         return Response(AnnotationSerializer(annotation).data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@api_view(['PUT'])
+@api_view(['GET','PUT','DELETE'])
 @permission_classes([IsAuthenticated])
-def update(request, pk):
-    try:
-        annotation = Annotation.objects.get(pk=pk)
-    except Annotation.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+def annotation_detail(request, pk):
+    annotation = get_object_or_404(Annotation, pk=pk)
 
-    serializer = AnnotationSerializer(annotation, data=request.data, context={'request': request})
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    if request.method == 'GET':
+        return Response(AnnotationSerializer(annotation).data)
+
+    elif request.method == 'PUT':
+        serializer = AnnotationSerializer(annotation, data=request.data, context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    elif request.method == 'DELETE':
+        annotation.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

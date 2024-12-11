@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -24,14 +25,22 @@ def create(request, project_id):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['GET'])
+@api_view(['GET', 'PUT', 'DELETE'])
 @permission_classes([IsAuthenticated])
 def document_details(request, project_id, document_id):
-    try:
-        project = Project.objects.get(pk=project_id)
-        document = Document.objects.get(project=project, pk=document_id,annotation__user=request.user)
-    except Project.DoesNotExist or Document.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+    project = get_object_or_404(Project, pk=project_id)
+    document = get_object_or_404(Document, project=project, pk=document_id)
 
-    return Response(DocumentSerializer(document).data)
+    if request.method == 'GET':
+        return Response(DocumentSerializer(document).data)
 
+    elif request.method == 'PUT':
+        serializer = DocumentSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    elif request.method == 'DELETE':
+        document.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
