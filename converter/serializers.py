@@ -1,12 +1,13 @@
 import csv
 import json
 import zipfile
-from io import BytesIO, TextIOWrapper, StringIO
-
+from collections import defaultdict
+from io import BytesIO
 from rest_framework import serializers
+from utility.FileProcessor import FileProcessor
 
 
-class ConverterSerializer(serializers.Serializer):
+class ConverterSerializer(serializers.Serializer, FileProcessor):
     files = serializers.ListField(
         child=serializers.FileField(),
     )
@@ -51,49 +52,8 @@ class ConverterSerializer(serializers.Serializer):
         zip_buffer.seek(0)
         return zip_buffer, 'application/zip'
 
-    def convert(self, content, export_as):
-        convert_method = getattr(self, f"to_{export_as}", None)
-        if not callable(convert_method):
-            raise ValueError(f"Unsupported export format: {export_as}")
 
-        return convert_method(content)
 
-    # File Readers
-    def read_txt(self, file):
-        content = file.read().decode('utf-8')
-        return [{"text": line.strip()} for line in content.splitlines() if line.strip()]
 
-    def read_json(self, file):
-        return json.load(file)
 
-    def read_jsonl(self, file):
-        return [json.loads(line) for line in file.read().decode('utf-8').splitlines()]
 
-    def read_csv(self, file):
-        return list(csv.DictReader(file.read().decode('utf-8').splitlines()))
-
-    # File Exporters
-    def to_json(self, content):
-        return json.dumps(content, indent=2).encode('utf-8')
-
-    def to_jsonl(self, content):
-        return "\n".join(json.dumps(item) for item in content).encode('utf-8')
-
-    def to_csv(self, content):
-        flattened_content = []
-        for item in content:
-            flattened_item = {}
-            for key, value in item.items():
-                if isinstance(value, list):
-                    flattened_item[key] = ", ".join(map(str, value))
-                else:
-                    flattened_item[key] = str(value) if value is not None else ""
-            flattened_content.append(flattened_item)
-
-        output = StringIO()
-        fieldnames = flattened_content[0].keys() if flattened_content else []
-        writer = csv.DictWriter(output, fieldnames=fieldnames)
-        writer.writeheader()
-        writer.writerows(flattened_content)
-
-        return output.getvalue().encode('utf-8')
