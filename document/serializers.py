@@ -1,7 +1,7 @@
 import csv
 import io
 import json
-from conllu import parse_incr
+from conllu import parse_incr, TokenList
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from annotation.serializers import AnnotationSerializer
@@ -80,6 +80,22 @@ class ImportDocumentSerializer(serializers.Serializer, FileProcessor):
     def update(self, instance, validated_data):
         return instance
 
+    # File Processors
+    def process_txt(self, files, project, key):
+        return self.process_files(files, file_reader=self.read_txt, key=key, project=project)
+
+    def process_json(self, files, project, key):
+        return self.process_files(files, file_reader=self.read_json, key=key, project=project)
+
+    def process_jsonl(self, files, project, key):
+        return self.process_files(files, file_reader=self.read_jsonl, key=key, project=project)
+
+    def process_csv(self, files, project, key):
+        return self.process_files(files, file_reader=self.read_csv, key=key, project=project)
+
+    def process_conllu(self, files, project, key):
+        return self.process_files(files, file_reader=self.read_conllu, key=key, project=project)
+
     def process_files(self, files, file_reader, key, project):
         created_documents = []
         file_errors = []
@@ -96,6 +112,8 @@ class ImportDocumentSerializer(serializers.Serializer, FileProcessor):
             except serializers.ValidationError as e:
                 file_errors.append({file.name: e.detail})
 
+        return created_documents, file_errors
+
     def read_file(self, file, file_reader, key):
         lines = []
         errors = []
@@ -106,68 +124,24 @@ class ImportDocumentSerializer(serializers.Serializer, FileProcessor):
                 return lines, errors
 
             for line_number, item in enumerate(data, start=1):
-                if isinstance(item, dict):
+                if isinstance(item, dict): # txt, json, jsonl, csv
                     value = item.get(key)
                     if value:
                         lines.append(value)
                     else:
                         errors.append({file.name: f"Line {line_number}: No data found for the key '{key}'"})
+
+                elif isinstance(item, str): # conllu
+                    if item:
+                        lines.append(item)
+                    else:
+                        errors.append({file.name: f"Line {line_number}: Invalid data"})
+
                 else:
                     errors.append({file.name: f"Line {line_number}: Key '{key}' not found"})
 
-        except (json.JSONDecodeError, csv.Error) as e:
+        except (json.JSONDecodeError, csv.Error, Exception) as e:
             errors.append({file.name: f"{str(e)}"})
 
         return lines, errors
 
-    def process_txt(self, file, project):
-
-        lines = []
-        errors = []
-
-        try:
-            for line_number, line in enumerate(file, start=1):
-                decoded_line = line.decode('utf-8').strip()
-                if decoded_line:
-                    lines.append(decoded_line)
-
-            if not lines:
-                errors.append({file.name: "No data found"})
-
-        except UnicodeDecodeError as e:
-            errors.append({file.name: f"{str(e)}"})
-
-        return self.create_document(project, lines), errors
-
-    def process_json(self, files, project, key):
-        return self.process_files(files, file_reader=self.read_json, key=key, project=project)
-
-    def process_jsonl(self, files, project, key):
-        return self.process_files(files, file_reader=self.read_jsonl, key=key, project=project)
-
-    def process_csv(self, files, project, key):
-        return self.process_files(files, file_reader=self.read_csv, key=key, project=project)
-
-    def process_conllu(self, file, project):
-
-        sentences = []
-        errors = []
-
-        try:
-            data = io.StringIO(file.read().decode("utf-8"))
-            for sentence_number, tokenlist in enumerate(parse_incr(data), start=1):
-                sentence = " ".join([token["form"] for token in tokenlist if token.get("form")])
-                if sentence:
-                    sentences.append(sentence)
-                else:
-                    errors.append({file.name: f"Line {sentence_number}: Invalid data"})
-
-        except Exception as e:
-            errors.append({file.name: str(e)})
-
-        return self.create_document(project, sentences), errors
-
-    def create_document(self, project, lines):
-        documents = [Document(project=project, text=line) for line in lines]
-        Document.objects.bulk_create(documents)
-        return documents

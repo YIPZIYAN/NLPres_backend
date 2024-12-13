@@ -1,7 +1,10 @@
 import csv
+import io
 import json
 from collections import defaultdict
 from io import StringIO
+
+from conllu import parse_incr
 
 
 class FileProcessor:
@@ -75,6 +78,24 @@ class FileProcessor:
             data.append(process_lists(reconstructed_row))
 
         return data
+
+    def read_conllu(self, file):
+        data = io.StringIO(file.read().decode("utf-8"))
+        sentences = []
+
+        for token_list in parse_incr(data):
+            words = []
+            for token in token_list:
+                form = token["form"]
+                misc = token.get("misc")
+                words.append(form)
+                if misc is None or misc.get("SpaceAfter") != "No":
+                    words.append(" ")
+            sentence = "".join(words).strip()
+            if sentence:
+                sentences.append(sentence)
+
+        return sentences
 
     # File Generator
     def to_json(self, content):
