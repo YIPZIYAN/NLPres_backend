@@ -1,9 +1,12 @@
+import json
+
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
 from label.models import Label
 from project.models import Project
 from project.serializers import ProjectSerializer
+from utility.FileProcessor import FileProcessor
 
 
 class LabelSerializer(serializers.ModelSerializer):
@@ -28,3 +31,67 @@ class LabelSerializer(serializers.ModelSerializer):
         instance.color = validated_data.get('color', instance.color)
         instance.save()
         return instance
+
+class ImportLabelSerializer(serializers.Serializer, FileProcessor):
+    files = serializers.ListField(child=serializers.FileField())
+
+    def create(self, validated_data):
+        files = validated_data['files']
+        project = get_object_or_404(Project, id=self.context.get('project_id'))
+
+        created_labels, file_errors = self.process_files(files, project)
+
+        if created_labels:
+            message = f"{len(created_labels)} label(s) imported successfully from {len(files)} file(s)."
+            return {
+                "message": message,
+                "objects": [
+                    {"name": label.name, "color": label.color} for label in created_labels
+                ],
+                "errors": file_errors
+            }
+
+        return {"errors": file_errors}
+
+    def process_files(self, files, project):
+        created_labels = []
+        file_errors = []
+
+        for file in files:
+            try:
+                lines, errors = self.read_file(file)
+                labels = [Label(project=project, name=line["text"], color=line["color"]) for line in lines]
+                Label.objects.bulk_create(labels)
+
+                created_labels.extend(labels)
+                file_errors.extend(errors)
+
+            except serializers.ValidationError as e:
+                file_errors.append({file.name: e.detail})
+
+        return created_labels, file_errors
+
+    def read_file(self, file):
+        lines = []
+        errors = []
+        try:
+            data = self.read_json(file)
+            if not data:
+                errors.append({file.name: "The file is empty"})
+                return lines, errors
+
+            for line_number, item in enumerate(data, start=1):
+                if isinstance(item, dict):
+                    text = item.get("text")
+                    color = item.get("color")
+                    if text and color:
+                        lines.append({"text": text, "color": color})
+                    else:
+                        errors.append({file.name: f"Line {line_number}: No text and color found"})
+                else:
+                    errors.append({file.name: f"Line {line_number}:No data found"})
+
+        except json.JSONDecodeError as e:
+            errors.append({file.name: f"{str(e)}"})
+
+        return lines, errors
