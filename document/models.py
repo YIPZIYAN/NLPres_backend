@@ -19,7 +19,6 @@ class Annotation(models.Model):
     document = models.ForeignKey(Document, on_delete=models.CASCADE)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     label = models.ForeignKey(Label, on_delete=models.CASCADE)
-    is_completed = models.BooleanField(default=False)
     start = models.IntegerField(null=True)
     end = models.IntegerField(null=True)
     created_at = models.DateTimeField(auto_now_add=True)
