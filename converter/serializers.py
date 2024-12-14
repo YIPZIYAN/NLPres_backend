@@ -1,7 +1,4 @@
-import csv
-import json
 import zipfile
-from collections import defaultdict
 from io import BytesIO
 from rest_framework import serializers
 from utility.FileProcessor import FileProcessor

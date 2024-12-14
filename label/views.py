@@ -5,7 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from label.models import Label
-from label.serializers import LabelSerializer
+from label.serializers import LabelSerializer, ImportLabelSerializer
 from project.models import Project
 
 
@@ -26,6 +26,15 @@ def create(request, project_id):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def import_file(request, project_id):
+    serializer = ImportLabelSerializer(data=request.data,  context={'project_id': project_id})
+    if serializer.is_valid():
+        response_data = serializer.save()
+        return Response(response_data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET', 'PUT', 'DELETE'])
 @permission_classes([IsAuthenticated])
