@@ -6,6 +6,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from annotation.serializers import AnnotationSerializer
 from document.models import Document, Annotation
+from label.serializers import LabelSerializer
 from utility.FileProcessor import FileProcessor
 from project.models import Project
 
@@ -15,7 +16,7 @@ class DocumentSerializer(serializers.Serializer):
     created_at = serializers.DateTimeField()
     updated_at = serializers.DateTimeField()
     project_id = serializers.PrimaryKeyRelatedField(queryset=Project.objects.all())
-    annotations = AnnotationSerializer(many=True,read_only=True,source='annotation_set')
+    annotation = serializers.SerializerMethodField()
 
     class Meta:
         model = Document
@@ -25,6 +26,26 @@ class DocumentSerializer(serializers.Serializer):
         instance.text = validated_data.get('text', instance.text)
         instance.save()
         return instance
+
+    def get_annotation(self, obj):
+        request = self.context.get('request')
+        if not request or not request.user:
+            return None
+
+        annotation = obj.annotation_set.filter(user_id=request.user.id).first()
+        if annotation:
+            return MyAnnotationSerializer(annotation).data
+        return None
+
+class MyAnnotationSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(read_only=True)
+    label = LabelSerializer(read_only=True)
+    start = serializers.IntegerField(read_only=True)
+    end = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = Annotation
+        fields = ['id', 'label', 'start', 'end']
 
 class ExportDocumentSerializer(serializers.Serializer, FileProcessor):
     export_as = serializers.ChoiceField(choices=['txt', 'json', 'jsonl', 'csv'])

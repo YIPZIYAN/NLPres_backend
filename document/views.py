@@ -7,7 +7,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from document.models import Document
+from document.models import Document, Annotation
 from document.serializers import DocumentSerializer, ImportDocumentSerializer, ExportDocumentSerializer
 from project.models import Project
 
@@ -15,8 +15,12 @@ from project.models import Project
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def index(request, project_id):
-    documents = Document.objects.filter(project_id=project_id)
-    return Response(DocumentSerializer(documents, many=True).data)
+    project = get_object_or_404(Project, pk=project_id)
+    documents = Document.objects.filter(project=project)
+
+    serialized_data = DocumentSerializer(documents, many=True,context={'request': request}).data
+
+    return Response(serialized_data)
 
 
 @api_view(['POST'])
