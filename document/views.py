@@ -53,7 +53,7 @@ def document_details(request, project_id, document_id):
     document = get_object_or_404(Document, project=project, pk=document_id)
 
     if request.method == 'GET':
-        return Response(DocumentSerializer(document).data)
+        return Response(DocumentSerializer(document,context={'request': request}).data)
 
     elif request.method == 'PUT':
         serializer = DocumentSerializer(data=request.data)

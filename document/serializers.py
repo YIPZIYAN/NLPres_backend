@@ -16,7 +16,7 @@ class DocumentSerializer(serializers.Serializer):
     created_at = serializers.DateTimeField()
     updated_at = serializers.DateTimeField()
     project_id = serializers.PrimaryKeyRelatedField(queryset=Project.objects.all())
-    annotation = serializers.SerializerMethodField()
+    annotation = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Document
