@@ -1,10 +1,7 @@
 import csv
-import io
 import json
-from conllu import parse_incr, TokenList
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-from annotation.serializers import AnnotationSerializer
 from document.models import Document, Annotation
 from label.serializers import LabelSerializer
 from utility.FileProcessor import FileProcessor
