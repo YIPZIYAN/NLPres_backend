@@ -1,3 +1,6 @@
+from lib2to3.fixes.fix_input import context
+
+from django.http import HttpResponse
 from django.shortcuts import render
 from rest_framework import viewsets, status
 from rest_framework.decorators import api_view, permission_classes
@@ -5,7 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from label.models import Label
-from label.serializers import LabelSerializer, ImportLabelSerializer
+from label.serializers import LabelSerializer, ImportLabelSerializer, ExportLabelSerializer
 from project.models import Project
 
 
@@ -35,6 +38,16 @@ def import_file(request, project_id):
         response_data = serializer.save()
         return Response(response_data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def export(request, project_id):
+    serializer = ExportLabelSerializer(data=request.data, context={'project_id': project_id})
+    if serializer.is_valid():
+        data, content_type = serializer.save()
+        response = HttpResponse(data, content_type=content_type)
+        response['Content-Disposition'] = 'attachment; filename="label_config"'
+        return response
 
 @api_view(['GET', 'PUT', 'DELETE'])
 @permission_classes([IsAuthenticated])

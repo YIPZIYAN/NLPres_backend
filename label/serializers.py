@@ -1,11 +1,8 @@
 import json
-
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-
 from label.models import Label
 from project.models import Project
-from project.serializers import ProjectSerializer
 from utility.FileProcessor import FileProcessor
 
 
@@ -31,6 +28,19 @@ class LabelSerializer(serializers.ModelSerializer):
         instance.color = validated_data.get('color', instance.color)
         instance.save()
         return instance
+
+class ExportLabelSerializer(serializers.Serializer, FileProcessor):
+
+    def save(self):
+        project = get_object_or_404(Project, pk=self.context.get('project_id'))
+        labels = Label.objects.filter(project=project)
+
+        labels_data = [
+            {'name': label["name"], 'color': label["color"]}
+            for label in labels.values("name", "color")
+        ]
+
+        return self.convert(labels_data, "json"), 'application/octet-stream'
 
 class ImportLabelSerializer(serializers.Serializer, FileProcessor):
     files = serializers.ListField(child=serializers.FileField())
@@ -60,7 +70,7 @@ class ImportLabelSerializer(serializers.Serializer, FileProcessor):
         for file in files:
             try:
                 lines, errors = self.read_file(file)
-                labels = [Label(project=project, name=line["text"], color=line["color"]) for line in lines]
+                labels = [Label(project=project, name=line["name"], color=line["color"]) for line in lines]
                 Label.objects.bulk_create(labels)
 
                 created_labels.extend(labels)
@@ -82,12 +92,12 @@ class ImportLabelSerializer(serializers.Serializer, FileProcessor):
 
             for line_number, item in enumerate(data, start=1):
                 if isinstance(item, dict):
-                    text = item.get("text")
+                    name = item.get("name")
                     color = item.get("color")
-                    if text and color:
-                        lines.append({"text": text, "color": color})
+                    if name and color:
+                        lines.append({"name": name, "color": color})
                     else:
-                        errors.append({file.name: f"Line {line_number}: No text and color found"})
+                        errors.append({file.name: f"Line {line_number}: No label name and color found"})
                 else:
                     errors.append({file.name: f"Line {line_number}:No data found"})
 
