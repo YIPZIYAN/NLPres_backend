@@ -42,5 +42,7 @@ urlpatterns = [
 
     path('api/converter/', include('converter.urls')),
 
+    path('api/comparison/', include('comparison.urls')),
+
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
