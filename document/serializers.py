@@ -13,7 +13,7 @@ class DocumentSerializer(serializers.Serializer):
     created_at = serializers.DateTimeField()
     updated_at = serializers.DateTimeField()
     project_id = serializers.PrimaryKeyRelatedField(queryset=Project.objects.all())
-    annotation = serializers.SerializerMethodField(read_only=True)
+    annotations = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Document
@@ -24,14 +24,14 @@ class DocumentSerializer(serializers.Serializer):
         instance.save()
         return instance
 
-    def get_annotation(self, obj):
+    def get_annotations(self, obj):
         request = self.context.get('request')
         if not request or not request.user:
             return None
 
-        annotation = obj.annotation_set.filter(user_id=request.user.id).first()
-        if annotation:
-            return MyAnnotationSerializer(annotation).data
+        user_annotations = obj.annotation_set.filter(user_id=request.user.id)
+        if user_annotations:
+            return MyAnnotationSerializer(user_annotations, many=True).data
         return None
 
 class MyAnnotationSerializer(serializers.ModelSerializer):
