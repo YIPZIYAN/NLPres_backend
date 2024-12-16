@@ -1,6 +1,4 @@
 import pickle
-
-from django.db.models.expressions import result
 from sklearn.metrics import accuracy_score
 from rest_framework import serializers
 from utility.FileProcessor import FileProcessor
@@ -40,7 +38,7 @@ class ComparisonSerializer(serializers.Serializer, FileProcessor):
             result.append({"testing": accuracy})
             print(f"Accuracy: {accuracy}")
 
-        return result
+        return {"objects": result}
 
     def process_file(self, file, file_reader, x_test_key, y_test_key):
         x_test = []
