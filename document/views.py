@@ -47,7 +47,7 @@ def progress(request, project_id):
     documents = Document.objects.filter(project=project)
 
     total_count = documents.count()
-    completed_count = documents.filter(annotation__isnull=False,annotation__user=request.user).count()
+    completed_count = documents.filter(annotation__isnull=False,annotation__user=request.user).distinct().count()
     pending_count = total_count - completed_count
 
     return Response({
