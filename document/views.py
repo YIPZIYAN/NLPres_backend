@@ -99,3 +99,13 @@ def document_details(request, project_id, document_id):
     elif request.method == 'DELETE':
         document.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def clear_label(request, project_id,document_id):
+    project = get_object_or_404(Project, pk=project_id)
+    document = get_object_or_404(Document, pk=document_id, project=project)
+    document.annotation_set.all().delete()
+
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
