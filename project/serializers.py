@@ -10,7 +10,7 @@ class CollaboratorSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Collaborator
-        fields = ['user', 'role']
+        fields = '__all__'
 
 
 class ProjectSerializer(serializers.ModelSerializer):
