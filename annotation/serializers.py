@@ -14,7 +14,7 @@ class AnnotationSerializer(serializers.ModelSerializer):
     start = serializers.IntegerField(allow_null=True, required=False)
     end = serializers.IntegerField(allow_null=True, required=False)
     label_id = serializers.IntegerField(write_only=True, required=True)
-    document_id = serializers.IntegerField(write_only=True, required=True)
+    document_id = serializers.IntegerField(write_only=True, required=False,allow_null=True)
     document = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
