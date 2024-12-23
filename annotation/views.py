@@ -11,11 +11,20 @@ from document.models import Annotation
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create(request):
-    serializer = AnnotationSerializer(data=request.data, context={'request': request})
-    if serializer.is_valid():
-        annotation = serializer.save()  # `create` method is called here
-        return Response(AnnotationSerializer(annotation).data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def process_data(data, many):
+        serializer = AnnotationSerializer(data=data, many=many, context={'request': request})
+        if serializer.is_valid():
+            annotations = serializer.save()
+            return Response(
+                AnnotationSerializer(annotations, many=many).data,
+                status=status.HTTP_201_CREATED
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    if isinstance(request.data, list):
+        return process_data(request.data, many=True)
+    return process_data(request.data, many=False)
+
 
 @api_view(['GET','PUT','DELETE'])
 @permission_classes([IsAuthenticated])
