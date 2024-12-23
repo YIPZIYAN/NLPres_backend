@@ -16,24 +16,12 @@ class ConverterSerializer(serializers.Serializer, FileProcessor):
         file_format = self.validated_data['file_format']
         export_as = self.validated_data['export_as']
 
-        process_method = getattr(self, f"process_{file_format}", None)
-        if not callable(process_method):
-            raise serializers.ValidationError(f"No processor available for file format: {file_format}")
+        file_reader = getattr(self, f"read_{file_format}", None)
+        if not callable(file_reader):
+            raise serializers.ValidationError(f"No reader available for file format: {file_format}")
 
-        return process_method(files, export_as)
+        return self.process_files(files, export_as, file_reader)
 
-    # File Processors
-    def process_txt(self, files, export_as):
-        return self.process_files(files, export_as, file_reader=self.read_txt)
-
-    def process_json(self, files, export_as):
-        return self.process_files(files, export_as, file_reader=self.read_json)
-
-    def process_jsonl(self, files, export_as):
-        return self.process_files(files, export_as, file_reader=self.read_jsonl)
-
-    def process_csv(self, files, export_as):
-        return self.process_files(files, export_as, file_reader=self.read_csv)
 
     def process_files(self, files, export_as, file_reader):
         zip_buffer = BytesIO()

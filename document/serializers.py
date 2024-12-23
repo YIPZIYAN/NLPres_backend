@@ -77,11 +77,11 @@ class ImportDocumentSerializer(serializers.Serializer, FileProcessor):
         key = validated_data['key']
         project = get_object_or_404(Project, id=self.context.get('project_id'))
 
-        process_method = getattr(self, f"process_{file_format}", None)
-        if not callable(process_method):
-            raise serializers.ValidationError(f"No processor available for file format: {file_format}")
+        file_reader = getattr(self, f"read_{file_format}", None)
+        if not callable(file_reader):
+            raise serializers.ValidationError(f"No reader available for file format: {file_format}")
 
-        created_documents, file_errors = process_method(files, project, key)
+        created_documents, file_errors = self.process_files(files, file_reader, key, project)
 
         if created_documents:
             message = f"{len(created_documents)} data imported successfully from {len(files)} file(s)."
@@ -98,29 +98,13 @@ class ImportDocumentSerializer(serializers.Serializer, FileProcessor):
     def update(self, instance, validated_data):
         return instance
 
-    # File Processors
-    def process_txt(self, files, project, key):
-        return self.process_files(files, file_reader=self.read_txt, key=key, project=project)
-
-    def process_json(self, files, project, key):
-        return self.process_files(files, file_reader=self.read_json, key=key, project=project)
-
-    def process_jsonl(self, files, project, key):
-        return self.process_files(files, file_reader=self.read_jsonl, key=key, project=project)
-
-    def process_csv(self, files, project, key):
-        return self.process_files(files, file_reader=self.read_csv, key=key, project=project)
-
-    def process_conllu(self, files, project, key):
-        return self.process_files(files, file_reader=self.read_conllu, key=key, project=project)
-
     def process_files(self, files, file_reader, key, project):
         created_documents = []
         file_errors = []
 
         for file in files:
             try:
-                lines, errors = self.read_file(file, file_reader, key)
+                lines, errors = self.validate_file_content(file, file_reader, key)
                 documents = [Document(project=project, text=line) for line in lines]
                 Document.objects.bulk_create(documents)
 
@@ -132,7 +116,7 @@ class ImportDocumentSerializer(serializers.Serializer, FileProcessor):
 
         return created_documents, file_errors
 
-    def read_file(self, file, file_reader, key):
+    def validate_file_content(self, file, file_reader, key):
         lines = []
         errors = []
         try:
