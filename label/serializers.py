@@ -69,7 +69,7 @@ class ImportLabelSerializer(serializers.Serializer, FileProcessor):
 
         for file in files:
             try:
-                lines, errors = self.read_file(file)
+                lines, errors = self.validate_file_content(file)
                 labels = [Label(project=project, name=line["name"], color=line["color"]) for line in lines]
                 Label.objects.bulk_create(labels)
 
@@ -81,7 +81,7 @@ class ImportLabelSerializer(serializers.Serializer, FileProcessor):
 
         return created_labels, file_errors
 
-    def read_file(self, file):
+    def validate_file_content(self, file):
         lines = []
         errors = []
         try:
