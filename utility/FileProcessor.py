@@ -9,10 +9,13 @@ from conllu import parse_incr
 
 class FileProcessor:
 
-    def convert(self, content, export_as):
+    def convert(self, content, export_as, sequential=False):
         convert_method = getattr(self, f"to_{export_as}", None)
         if not callable(convert_method):
             raise ValueError(f"Unsupported export format: {export_as}")
+
+        if export_as == "csv":
+            return convert_method(content, sequential)
 
         return convert_method(content)
 
@@ -104,7 +107,7 @@ class FileProcessor:
     def to_jsonl(self, content):
         return "\n".join(json.dumps(item) for item in content).encode('utf-8')
 
-    def to_csv(self, content):
+    def to_csv(self, content, sequential=False):
 
         def flatten_json(json_obj, parent_key='', sep='/'):
             items = []
@@ -129,13 +132,20 @@ class FileProcessor:
                 items.append((parent_key, json_obj if json_obj is not None else ''))
             return dict(items)
 
-        flattened_content = [flatten_json(item) for item in content]
-
         headers = []
-        for item in flattened_content:
-            for key in item.keys():
-                if key not in headers:
-                    headers.append(key)
+        flattened_content = []
+        if sequential:
+            headers = content[0].keys()
+            flattened_content = content
+
+        else:
+            flattened_content = [flatten_json(item) for item in content]
+
+            for item in flattened_content:
+                for key in item.keys():
+                    if key not in headers:
+                        headers.append(key)
+
 
         output = StringIO()
         csv_writer = csv.DictWriter(output, fieldnames=headers)
