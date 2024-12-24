@@ -14,7 +14,6 @@ from project.models import Project
 from userprofile.models import CustomUser
 
 
-# Create your views here.
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def binary_classification(request, project_id):
@@ -32,9 +31,9 @@ def binary_classification(request, project_id):
     documents = Document.objects.filter(project=project)
     document_data = []
 
+
     for doc in documents:
         annotations = Annotation.objects.filter(document=doc,user__in=[user_1,user_2])
-
         for annotation in annotations:
             document_data.append([doc.id, annotation.user.id, annotation.label.id])
 
