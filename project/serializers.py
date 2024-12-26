@@ -12,6 +12,13 @@ class CollaboratorSerializer(serializers.ModelSerializer):
         model = Collaborator
         fields = '__all__'
 
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        user_serializer = UserSerializer(instance.user, context=self.context)
+        representation['user'] = user_serializer.data
+
+        return representation
+
 
 class ProjectSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(read_only=True)
