@@ -8,8 +8,8 @@ class ConverterSerializer(serializers.Serializer, FileProcessor):
     files = serializers.ListField(
         child=serializers.FileField(),
     )
-    file_format = serializers.ChoiceField(choices=['txt', 'json', 'jsonl', 'csv'])
-    export_as = serializers.ChoiceField(choices=['txt', 'json', 'jsonl', 'csv'])
+    file_format = serializers.ChoiceField(choices=['txt', 'json', 'jsonl', 'csv', 'conllu'])
+    export_as = serializers.ChoiceField(choices=['txt', 'json', 'jsonl', 'csv', 'conllu'])
 
     def save(self):
         files = self.validated_data['files']

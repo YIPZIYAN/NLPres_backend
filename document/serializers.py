@@ -46,7 +46,7 @@ class MyAnnotationSerializer(serializers.ModelSerializer):
         fields = ['id', 'label', 'start', 'end']
 
 class ExportDocumentSerializer(serializers.Serializer, FileProcessor):
-    export_as = serializers.ChoiceField(choices=['json', 'jsonl', 'csv'])
+    export_as = serializers.ChoiceField(choices=['json', 'jsonl', 'csv', 'conllu'])
     annotated_only = serializers.BooleanField()
 
     def save(self):
@@ -72,18 +72,13 @@ class ExportDocumentSerializer(serializers.Serializer, FileProcessor):
                 for document in documents:
                     annotations = Annotation.objects.filter(document=document)
                     annotations = sorted(annotations, key=lambda x: (x.start, x.end))
-                    start_end = [
-                        [annotation.start, annotation.end] for annotation in annotations
-                    ]
-
-                    labels = [
-                        annotation.label.name for annotation in annotations
+                    label = [
+                        [annotation.start, annotation.end, annotation.label.name] for annotation in annotations
                     ]
 
                     documents_data.append({
                         "text": document.text,
-                        "labels": labels,
-                        "start_end": start_end,
+                        "label": label,
                     })
 
         if export_as == 'csv' and project.is_category(ProjectCategory.SEQUENTIAL):
