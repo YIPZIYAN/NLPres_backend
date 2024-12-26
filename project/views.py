@@ -56,3 +56,13 @@ def completed_collaborators(request, project_id):
 
     serializer = CollaboratorSerializer(completed, many=True, context={'request': request})
     return Response(serializer.data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def collaborator_create(request, project_id):
+    serializer = CollaboratorSerializer(data=request.data,context={'project_id': project_id})
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

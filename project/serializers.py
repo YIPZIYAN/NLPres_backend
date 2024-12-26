@@ -1,3 +1,6 @@
+from random import choices
+
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
 from enums.Role import Role
@@ -7,10 +10,20 @@ from userprofile.serializers import UserSerializer
 
 class CollaboratorSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
+    role = serializers.CharField(required=True)
+    user_id = serializers.IntegerField(write_only=True)
 
     class Meta:
         model = Collaborator
-        fields = '__all__'
+        fields = ['user','role','user_id']
+
+    def create(self, validated_data):
+        project_id = self.context.get('project_id')
+        if not project_id:
+            raise serializers.ValidationError({"project_id": "This field is required."})
+
+        project = get_object_or_404(Project, id=project_id)
+        return Collaborator.objects.create(project=project, **validated_data)
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
