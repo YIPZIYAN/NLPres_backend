@@ -14,7 +14,7 @@ class Project(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def is_category(self, category: ProjectCategory) -> bool:
-        return self.category == category.name
+        return self.category == category.value
 
     class Meta:
         db_table = 'projects'
