@@ -3,6 +3,7 @@ import json
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from document.models import Document, Annotation
+from enums.ProjectCategory import ProjectCategory
 from label.serializers import LabelSerializer
 from utility.FileProcessor import FileProcessor
 from project.models import Project
@@ -45,7 +46,7 @@ class MyAnnotationSerializer(serializers.ModelSerializer):
         fields = ['id', 'label', 'start', 'end']
 
 class ExportDocumentSerializer(serializers.Serializer, FileProcessor):
-    export_as = serializers.ChoiceField(choices=['txt', 'json', 'jsonl', 'csv'])
+    export_as = serializers.ChoiceField(choices=['json', 'jsonl', 'csv', 'conllu'])
     annotated_only = serializers.BooleanField()
 
     def save(self):
@@ -55,14 +56,36 @@ class ExportDocumentSerializer(serializers.Serializer, FileProcessor):
         user = self.context['request'].user
         documents = Document.objects.filter(project=project)
         if annotated_only:
-            documents = documents.filter(annotation__user=user)
+            documents = documents.filter(annotation__user=user).distinct()
 
-        documents_data = [
-            {'text': document["text"], 'label': document.pop('annotation__label__name')}
-            for document in documents.values("text", "annotation__label__name")
-        ]
+        documents_data = []
+        match project.category:
+            case ProjectCategory.CLASSIFICATION.value:
+                documents_data = [
+                    {'text': document["text"], 'label': document.pop('annotation__label__name')}
+                    for document in documents.values("text", "annotation__label__name")
+                ]
+
+            case ProjectCategory.SEQUENTIAL.value:
+                documents_data = []
+                print(documents)
+                for document in documents:
+                    annotations = Annotation.objects.filter(document=document)
+                    annotations = sorted(annotations, key=lambda x: (x.start, x.end))
+                    label = [
+                        [annotation.start, annotation.end, annotation.label.name] for annotation in annotations
+                    ]
+
+                    documents_data.append({
+                        "text": document.text,
+                        "label": label,
+                    })
+
+        if export_as == 'csv' and project.is_category(ProjectCategory.SEQUENTIAL):
+            return self.convert(documents_data, export_as, sequential=True), 'application/octet-stream'
 
         return self.convert(documents_data, export_as), 'application/octet-stream'
+
 
 class ImportDocumentSerializer(serializers.Serializer, FileProcessor):
     files = serializers.ListField(

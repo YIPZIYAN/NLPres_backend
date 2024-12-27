@@ -32,17 +32,17 @@ class ComparisonSerializer(serializers.Serializer, FileProcessor):
         x_test, y_test, errors = self.process_file(file, file_reader, x_test_key, y_test_key)
 
         if x_test and y_test:
-            result = self.compare(models, x_test, y_test, project)
+            result = self.compare(models, x_test, y_test)
             return {
                 "message": "Model evaluation report has generated.",
                 "objects": result,
+                "models": [first_model.name, second_model.name]
             }
 
         return {"errors": errors}
 
-    def compare(self, models, x_test, y_test, project):
+    def compare(self, models, x_test, y_test):
         result = []
-
         for model_file in models:
             model = pickle.load(model_file)
             y_pred = model.predict(x_test)

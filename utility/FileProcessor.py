@@ -3,16 +3,18 @@ import io
 import json
 from collections import defaultdict
 from io import StringIO
-
-from conllu import parse_incr
+from conllu import parse_incr, TokenList, Token, Metadata
 
 
 class FileProcessor:
 
-    def convert(self, content, export_as):
+    def convert(self, content, export_as, sequential=False):
         convert_method = getattr(self, f"to_{export_as}", None)
         if not callable(convert_method):
             raise ValueError(f"Unsupported export format: {export_as}")
+
+        if export_as == "csv":
+            return convert_method(content, sequential)
 
         return convert_method(content)
 
@@ -47,10 +49,12 @@ class FileProcessor:
         raise ValueError("Unsupported JSON format")
 
     def read_csv(self, file):
-        content = csv.DictReader(file.read().decode('utf-8').splitlines())
+        content = file.read().decode('utf-8')
+        delimiter = csv.Sniffer().sniff(content.splitlines()[0]).delimiter
+        csv_reader = csv.DictReader(content.splitlines(), delimiter=delimiter)
         data = []
 
-        for row in content:
+        for row in csv_reader:
             reconstructed_row = defaultdict(dict)
 
             for key, value in row.items():
@@ -104,7 +108,7 @@ class FileProcessor:
     def to_jsonl(self, content):
         return "\n".join(json.dumps(item) for item in content).encode('utf-8')
 
-    def to_csv(self, content):
+    def to_csv(self, content, sequential=False):
 
         def flatten_json(json_obj, parent_key='', sep='/'):
             items = []
@@ -129,13 +133,20 @@ class FileProcessor:
                 items.append((parent_key, json_obj if json_obj is not None else ''))
             return dict(items)
 
-        flattened_content = [flatten_json(item) for item in content]
-
         headers = []
-        for item in flattened_content:
-            for key in item.keys():
-                if key not in headers:
-                    headers.append(key)
+        flattened_content = []
+        if sequential:
+            headers = content[0].keys()
+            flattened_content = content
+
+        else:
+            flattened_content = [flatten_json(item) for item in content]
+
+            for item in flattened_content:
+                for key in item.keys():
+                    if key not in headers:
+                        headers.append(key)
+
 
         output = StringIO()
         csv_writer = csv.DictWriter(output, fieldnames=headers)
@@ -143,3 +154,60 @@ class FileProcessor:
         csv_writer.writerows(flattened_content)
 
         return output.getvalue().encode('utf-8')
+
+
+    def to_conllu(self, content):
+
+        def create_token(word, token_label):
+            nonlocal idx
+            token = {
+                "id": idx,
+                "form": word,
+                "lemma": word.lower(),
+                "upostag": token_label,
+                "xpostag": "_",
+                "feats": "_",
+                "head": 0,
+                "deprel": "_",
+                "deps": "_",
+                "misc": "_"
+            }
+            idx += 1
+            return token
+
+        def add_tokens(segment, token_label="O"):
+            for word in segment.split():
+                tokens.append(create_token(word, token_label))
+
+        serialized_sentences = []
+
+        for document in content:
+            text = document.get("text", "")
+            labels = sorted(document.get("label", []), key=lambda x: (x[0], x[1]))
+            tokens = []
+            prev_end = -1
+            idx = 1
+
+            for label in labels:
+                start, end, label_name = label
+                if start != (prev_end + 1):
+                    segment = text[prev_end + 1: start]
+                    prev_end = start - 1
+                    add_tokens(segment)
+
+                word = text[start:end + 1] if (start == end) else text[start:end]
+                prev_end = end
+                tokens.append(create_token(word, label_name))
+
+            if prev_end != len(text) - 1:
+                segment = text[prev_end + 1: len(text)]
+                add_tokens(segment)
+
+            metadata = Metadata({"text": text})
+            sentence = TokenList(tokens, metadata=metadata)
+            serialized_sentences.append(sentence.serialize())
+
+        return "".join(serialized_sentences).encode("utf-8")
+
+
+
