@@ -59,34 +59,27 @@ def fleiss_kappa(request, project_id):
 
     # Validate the user IDs
     if not isinstance(user_ids, list) or len(user_ids) < 2:
-        raise ValidationError("You must provide at least 2 user IDs in a list.")
+        raise ValidationError("You must provide atleast 2 user IDs in a list.")
 
     if User.objects.filter(id__in=user_ids).count() < 2:
         raise ValidationError("One or more provided user IDs do not exist.")
 
-    # Get the project and its documents
     project = get_object_or_404(Project, pk=project_id)
     documents = Document.objects.filter(project=project)
-
-    if not documents.exists():
-        raise ValidationError("No documents found for this project.")
-
-    # Get all labels for the project
     categories = list(Label.objects.filter(project=project).values_list('name', flat=True))
 
-    # Build ratings matrix
     ratings_matrix = []
     for doc in documents:
-        # Collect annotations for the document across all users
         annotations = Annotation.objects.filter(document=doc, user_id__in=user_ids).select_related("label")
         if not annotations.exists():
             raise ValidationError(f"No annotations found for document ID {doc.id}")
 
-        # Count occurrences of each label in this document's annotations
         label_counts = [annotations.filter(label__name=category).count() for category in categories]
         ratings_matrix.append(label_counts)
 
-    # Compute Fleiss' Kappa
-    kappa = fleiss_kappa_score(ratings_matrix)
+    try:
+        kappa = fleiss_kappa_score(ratings_matrix)
+    except:
+        raise ValidationError(f"Fleiss Kappa score matrix is empty.")
 
-    return Response({"kappa": kappa, "ratings_matrix": ratings_matrix}, status=status.HTTP_200_OK)
+    return Response(kappa, status=status.HTTP_200_OK)
