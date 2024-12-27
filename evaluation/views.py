@@ -7,8 +7,10 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from sklearn.metrics import cohen_kappa_score
+from statsmodels.stats.inter_rater import fleiss_kappa as fleiss_kappa_score
 
 from document.models import Annotation, Document
+from label.models import Label
 from project.models import Project
 
 
@@ -21,7 +23,7 @@ def cohen_kappa(request, project_id):
     if not isinstance(user_ids, list) or len(user_ids) != 2:
         raise ValidationError("You must provide exactly 2 user IDs in a list.")
 
-    if not User.objects.filter(id__in=user_ids).count() == 2:
+    if User.objects.filter(id__in=user_ids).count() < 2:
         raise ValidationError("One or more provided user IDs do not exist.")
 
     # Get the project and its documents
@@ -34,7 +36,7 @@ def cohen_kappa(request, project_id):
     # Retrieve annotations for each document and user
     for doc in documents:
         for idx, user_id in enumerate(user_ids):
-            annotations = Annotation.objects.filter(document=doc, user_id=user_id).select_related("label")
+            annotations = Annotation.objects.filter(document=doc, user_id=user_id).select_related("label").order_by("document_id")
             if not annotations.exists():
                 raise ValidationError("Annotators have not yet been completed.")
 
@@ -49,3 +51,42 @@ def cohen_kappa(request, project_id):
     kappa = cohen_kappa_score(annotators[0], annotators[1])
 
     return Response(kappa, status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def fleiss_kappa(request, project_id):
+    user_ids = request.data.get("user_ids", [])
+
+    # Validate the user IDs
+    if not isinstance(user_ids, list) or len(user_ids) < 2:
+        raise ValidationError("You must provide at least 2 user IDs in a list.")
+
+    if User.objects.filter(id__in=user_ids).count() < 2:
+        raise ValidationError("One or more provided user IDs do not exist.")
+
+    # Get the project and its documents
+    project = get_object_or_404(Project, pk=project_id)
+    documents = Document.objects.filter(project=project)
+
+    if not documents.exists():
+        raise ValidationError("No documents found for this project.")
+
+    # Get all labels for the project
+    categories = list(Label.objects.filter(project=project).values_list('name', flat=True))
+
+    # Build ratings matrix
+    ratings_matrix = []
+    for doc in documents:
+        # Collect annotations for the document across all users
+        annotations = Annotation.objects.filter(document=doc, user_id__in=user_ids).select_related("label")
+        if not annotations.exists():
+            raise ValidationError(f"No annotations found for document ID {doc.id}")
+
+        # Count occurrences of each label in this document's annotations
+        label_counts = [annotations.filter(label__name=category).count() for category in categories]
+        ratings_matrix.append(label_counts)
+
+    # Compute Fleiss' Kappa
+    kappa = fleiss_kappa_score(ratings_matrix)
+
+    return Response({"kappa": kappa, "ratings_matrix": ratings_matrix}, status=status.HTTP_200_OK)
