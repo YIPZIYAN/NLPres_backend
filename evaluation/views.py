@@ -9,6 +9,7 @@ from sklearn.metrics import cohen_kappa_score
 from statsmodels.stats.inter_rater import fleiss_kappa as fleiss_kappa_score
 
 from document.models import Annotation, Document
+from enums.ProjectCategory import ProjectCategory
 from label.models import Label
 from project.models import Project
 
@@ -81,6 +82,8 @@ def calculate_kappa(request, project_id):
 
     # Get the project
     project = get_object_or_404(Project, pk=project_id)
+    if not project.category == ProjectCategory.CLASSIFICATION.value:
+        raise ValidationError("Project category is not classification.")
 
     # Get documents
     documents = Document.objects.filter(project=project)
