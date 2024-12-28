@@ -41,7 +41,7 @@ def project_details(request, project_id):
         return Response(ProjectSerializer(project, context={'request': request}).data)
 
     elif request.method == 'PUT':
-        serializer = ProjectSerializer(data=request.data)
+        serializer = ProjectSerializer(project,data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
