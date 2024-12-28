@@ -13,6 +13,7 @@ from rest_framework.response import Response
 from NLPres_backend.util import calculate_progress
 from document.models import Document, Annotation
 from document.serializers import DocumentSerializer, ImportDocumentSerializer, ExportDocumentSerializer
+from enums.ProjectCategory import ProjectCategory
 from project.models import Project
 
 
@@ -88,6 +89,8 @@ def document_details(request, project_id, document_id):
         serializer = DocumentSerializer(document,data=request.data)
         if serializer.is_valid():
             serializer.save(project_id=project_id)
+            if project.category == ProjectCategory.SEQUENTIAL.value:
+                document.annotation_set.filter(user=request.user).delete()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
