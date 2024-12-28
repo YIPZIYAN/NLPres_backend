@@ -52,7 +52,8 @@ INSTALLED_APPS = [
     "document.apps.DocumentConfig",
     "annotation.apps.AnnotationConfig",
     "userprofile.apps.UserprofileConfig",
-    "evaluation.apps.EvaluationConfig"
+    "evaluation.apps.EvaluationConfig",
+    "comparison.apps.ComparisonConfig"
 ]
 
 REST_FRAMEWORK = {
