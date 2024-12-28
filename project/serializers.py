@@ -9,13 +9,14 @@ from userprofile.serializers import UserSerializer
 
 
 class CollaboratorSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(read_only=True)
     user = UserSerializer(read_only=True)
     role = serializers.CharField(required=True)
     user_id = serializers.IntegerField(write_only=True)
 
     class Meta:
         model = Collaborator
-        fields = ['user','role','user_id']
+        fields = ['id','user','role','user_id']
 
     def create(self, validated_data):
         project_id = self.context.get('project_id')
@@ -39,7 +40,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     description = serializers.CharField(required=True, max_length=255)
     category = serializers.CharField(required=True, max_length=100)
     created_at = serializers.DateTimeField(read_only=True)
-    collaborators = CollaboratorSerializer(many=True, source='collaborator_set',read_only=True)
+    collaborators = serializers.SerializerMethodField()
     updated_at = serializers.DateTimeField(read_only=True)
 
     class Meta:
@@ -54,3 +55,15 @@ class ProjectSerializer(serializers.ModelSerializer):
                                     role=Role.OWNER.value)
 
         return project
+
+    def update(self, instance, validated_data):
+        instance.title = validated_data.get('title', instance.title)
+        instance.description = validated_data.get('description', instance.description)
+        instance.category = validated_data.get('category', instance.category)
+        instance.save()
+
+    def get_collaborators(self, obj):
+        collaborators = obj.collaborator_set.all()
+        serializer = CollaboratorSerializer(collaborators, many=True, context=self.context)
+        return serializer.data
+

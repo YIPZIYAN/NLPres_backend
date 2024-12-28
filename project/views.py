@@ -18,7 +18,8 @@ from userprofile.serializers import UserSerializer
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def index(request):
-    return Response(ProjectSerializer(Project.objects.filter(collaborator__user=request.user), many=True).data)
+    return Response(ProjectSerializer(Project.objects.filter(collaborator__user=request.user), many=True,
+                                      context={'request': request}).data)
 
 
 @api_view(['POST'])
@@ -31,15 +32,24 @@ def create(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['GET'])
+@api_view(['GET', 'PUT', 'DELETE'])
 @permission_classes([IsAuthenticated])
 def project_details(request, project_id):
-    try:
-        project = Project.objects.get(pk=project_id)
-    except Project.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+    project = get_object_or_404(Project, pk=project_id)
 
-    return Response(ProjectSerializer(project, context={'request': request}).data)
+    if request.method == 'GET':
+        return Response(ProjectSerializer(project, context={'request': request}).data)
+
+    elif request.method == 'PUT':
+        serializer = ProjectSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    elif request.method == 'DELETE':
+        project.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 @api_view(['GET'])
@@ -61,8 +71,17 @@ def completed_collaborators(request, project_id):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def collaborator_create(request, project_id):
-    serializer = CollaboratorSerializer(data=request.data,context={'project_id': project_id})
+    serializer = CollaboratorSerializer(data=request.data, context={'project_id': project_id})
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def collaborator_delete(request, project_id, collaborator_id):
+    project = get_object_or_404(Project, pk=project_id)
+    collaborator = get_object_or_404(Collaborator, pk=collaborator_id, project=project)
+    collaborator.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
