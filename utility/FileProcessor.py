@@ -61,10 +61,12 @@ class FileProcessor:
             reconstructed_row = defaultdict(dict)
 
             for key, value in row.items():
-                if value.isdigit():
-                    value = int(value)
-                elif value.replace('.', '', 1).isdigit():
-                    value = float(value)
+                if value is not None:
+                    value = value.strip()
+                    if value.isdigit():
+                        value = int(value)
+                    elif value.replace('.', '', 1).isdigit():
+                        value = float(value)
 
                 # Reconstruct nested structures
                 keys = key.split('/')
@@ -192,7 +194,7 @@ class FileProcessor:
                 for label in labels:
                     start, end, label_name = label
 
-                    if start < 0 or end >= len(text):
+                    if start < 0 or end > len(text):
                         raise ValueError(f"Line {line_number} label index out of bounds")
 
                     if start != (prev_end + 1):
@@ -302,7 +304,7 @@ class FileProcessor:
                     for label in labels:
                         start, end, label_name = label
 
-                        if start < 0 or end >= len(text):
+                        if start < 0 or end > len(text):
                             raise ValueError(f"Line {line_number} label index out of bounds")
 
                         if start != (prev_end + 1):

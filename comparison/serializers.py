@@ -57,33 +57,38 @@ class CompareSerializer(serializers.Serializer, FileProcessor):
             models_name = [first_model.name, second_model.name]
             Comparison.objects.create(project=project, name=name, models_name=models_name, result=result)
             return {
-                "message": "Model evaluation report has generated."
+                "message": "Model evaluation report has generated.",
             }
 
         return {"errors": errors}
 
     def compare(self, models, x_test, y_test):
+
         result = []
         for model_file in models:
-            model = pickle.load(model_file)
-            y_pred = model.predict(x_test)
+            try:
+                model = pickle.load(model_file)
+                y_pred = model.predict(x_test)
 
-            report = classification_report(y_test, y_pred, output_dict=True)
+                report = classification_report(y_test, y_pred, output_dict=True)
 
-            precision_micro = precision_score(y_test, y_pred, average='micro')
-            recall_micro = recall_score(y_test, y_pred, average='micro')
-            f1_micro = f1_score(y_test, y_pred, average='micro')
+                precision_micro = precision_score(y_test, y_pred, average='micro')
+                recall_micro = recall_score(y_test, y_pred, average='micro')
+                f1_micro = f1_score(y_test, y_pred, average='micro')
 
-            report["micro avg"] = {
-                "precision": precision_micro,
-                "recall": recall_micro,
-                "f1-score": f1_micro,
-                "support": float(len(y_test))
-            }
+                report["micro avg"] = {
+                    "precision": precision_micro,
+                    "recall": recall_micro,
+                    "f1-score": f1_micro,
+                    "support": float(len(y_test))
+                }
 
-            result.append(report)
+                result.append(report)
+            except Exception as e:
+                raise serializers.ValidationError({"errors": f"Model {model_file.name} cannot be processed: {str(e)}"})
 
         return {"objects": result}
+
 
     def process_file(self, file, file_reader, x_test_key, y_test_key):
         x_test = []
