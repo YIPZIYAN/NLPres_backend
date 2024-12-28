@@ -13,6 +13,7 @@ from rest_framework.response import Response
 from NLPres_backend.util import calculate_progress
 from document.models import Document, Annotation
 from document.serializers import DocumentSerializer, ImportDocumentSerializer, ExportDocumentSerializer
+from enums.ProjectCategory import ProjectCategory
 from project.models import Project
 
 
@@ -22,9 +23,10 @@ def index(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
     documents = Document.objects.filter(project=project)
 
-    serialized_data = DocumentSerializer(documents, many=True,context={'request': request}).data
+    serialized_data = DocumentSerializer(documents, many=True, context={'request': request}).data
 
     return Response(serialized_data)
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -41,6 +43,7 @@ def pagination(request, project_id):
     ).data
 
     return paginator.get_paginated_response(serialized_data)
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -80,12 +83,14 @@ def document_details(request, project_id, document_id):
     document = get_object_or_404(Document, project=project, pk=document_id)
 
     if request.method == 'GET':
-        return Response(DocumentSerializer(document,context={'request': request}).data)
+        return Response(DocumentSerializer(document, context={'request': request}).data)
 
     elif request.method == 'PUT':
-        serializer = DocumentSerializer(data=request.data)
+        serializer = DocumentSerializer(document,data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            serializer.save(project_id=project_id)
+            if project.category == ProjectCategory.SEQUENTIAL.value:
+                document.annotation_set.filter(user=request.user).delete()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -93,12 +98,12 @@ def document_details(request, project_id, document_id):
         document.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
-def clear_label(request, project_id,document_id):
+def clear_label(request, project_id, document_id):
     project = get_object_or_404(Project, pk=project_id)
     document = get_object_or_404(Document, pk=document_id, project=project)
     document.annotation_set.filter(user=request.user).delete()
 
     return Response(status=status.HTTP_204_NO_CONTENT)
-
