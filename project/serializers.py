@@ -9,13 +9,14 @@ from userprofile.serializers import UserSerializer
 
 
 class CollaboratorSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(read_only=True)
     user = UserSerializer(read_only=True)
     role = serializers.CharField(required=True)
     user_id = serializers.IntegerField(write_only=True)
 
     class Meta:
         model = Collaborator
-        fields = ['user','role','user_id']
+        fields = ['id','user','role','user_id']
 
     def create(self, validated_data):
         project_id = self.context.get('project_id')
