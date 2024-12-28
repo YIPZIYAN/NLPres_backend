@@ -12,15 +12,21 @@ class UserSerializer(UserDetailsSerializer):
         model = CustomUser
         fields = UserDetailsSerializer.Meta.fields + ('avatar',)
 
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        request = self.context.get('request', None)
+
+        if request and instance.avatar:
+            representation['avatar'] = request.build_absolute_uri(instance.avatar.url)
+
+        return representation
+
     def update(self, instance, validated_data):
         avatar = validated_data.pop('avatar', None)
-
         if avatar is not None:
             instance.avatar = avatar
-
         instance = super().update(instance, validated_data)
         instance.save()
-
         return instance
 
 

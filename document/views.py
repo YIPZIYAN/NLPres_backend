@@ -9,6 +9,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+
+from NLPres_backend.util import calculate_progress
 from document.models import Document, Annotation
 from document.serializers import DocumentSerializer, ImportDocumentSerializer, ExportDocumentSerializer
 from project.models import Project
@@ -44,17 +46,8 @@ def pagination(request, project_id):
 @permission_classes([IsAuthenticated])
 def progress(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
-    documents = Document.objects.filter(project=project)
-
-    total_count = documents.count()
-    completed_count = documents.filter(annotation__isnull=False,annotation__user=request.user).distinct().count()
-    pending_count = total_count - completed_count
-
-    return Response({
-        'total': total_count,
-        'completed': completed_count,
-        'pending': pending_count,
-    })
+    progress_data = calculate_progress(request.user, project)
+    return Response(progress_data)
 
 
 @api_view(['POST'])
@@ -99,13 +92,4 @@ def document_details(request, project_id, document_id):
     elif request.method == 'DELETE':
         document.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-
-@api_view(['DELETE'])
-@permission_classes([IsAuthenticated])
-def clear_label(request, project_id,document_id):
-    project = get_object_or_404(Project, pk=project_id)
-    document = get_object_or_404(Document, pk=document_id, project=project)
-    document.annotation_set.all().delete()
-
-    return Response(status=status.HTTP_204_NO_CONTENT)
 
