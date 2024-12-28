@@ -1,5 +1,7 @@
 import csv
 import json
+from lib2to3.fixes.fix_input import context
+
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from document.models import Document, Annotation
@@ -10,15 +12,15 @@ from project.models import Project
 
 class DocumentSerializer(serializers.Serializer):
     id = serializers.IntegerField(read_only=True)
-    text = serializers.CharField()
-    created_at = serializers.DateTimeField()
-    updated_at = serializers.DateTimeField()
-    project_id = serializers.PrimaryKeyRelatedField(queryset=Project.objects.all())
+    text = serializers.CharField(required=True)
     annotations = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Document
         fields = '__all__'
+
+    def create(self, validated_data):
+        return Document.objects.create(**validated_data)
 
     def update(self, instance, validated_data):
         instance.text = validated_data.get('text', instance.text)
