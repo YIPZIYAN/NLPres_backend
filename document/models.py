@@ -14,6 +14,7 @@ class Document(models.Model):
 
     class Meta:
         db_table = 'documents'
+        ordering = ['created_at']
 
 class Annotation(models.Model):
     document = models.ForeignKey(Document, on_delete=models.CASCADE)
