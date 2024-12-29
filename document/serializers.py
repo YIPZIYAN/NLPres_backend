@@ -19,6 +19,7 @@ class DocumentSerializer(serializers.Serializer):
         model = Document
         fields = '__all__'
 
+
     def create(self, validated_data):
         return Document.objects.create(**validated_data)
 

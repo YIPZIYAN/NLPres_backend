@@ -9,4 +9,5 @@ urlpatterns = [
     path('<int:project_id>/completed-collaborators',views.completed_collaborators, name='completed_collaborators'),
     path('<int:project_id>/collaborators/create',views.collaborator_create, name='collaborator_create'),
     path('<int:project_id>/collaborators/<int:collaborator_id>',views.collaborator_delete, name='collaborator_delete'),
+    path('<int:project_id>/collaborators/quit', views.collaborator_quit, name='collaborator_quit'),
 ]
