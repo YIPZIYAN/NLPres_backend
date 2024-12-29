@@ -12,8 +12,8 @@ from utility.FileProcessor import FileProcessor
 class ComparisonSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(read_only=True)
     name = serializers.CharField(required=True, max_length=100)
-    models_name = serializers.JSONField()
-    result = serializers.JSONField(required=True)
+    models_name = serializers.JSONField(required=False)
+    result = serializers.JSONField(required=False)
     updated_at = serializers.DateTimeField(read_only=True)
 
     class Meta:
