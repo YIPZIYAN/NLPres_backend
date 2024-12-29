@@ -83,5 +83,10 @@ def collaborator_create(request, project_id):
 def collaborator_delete(request, project_id, collaborator_id):
     project = get_object_or_404(Project, pk=project_id)
     collaborator = get_object_or_404(Collaborator, pk=collaborator_id, project=project)
+    documents = Document.objects.filter(project_id=project_id)
+
+    for document in documents:
+        document.annotation_set.filter(user=collaborator.user).delete()
+
     collaborator.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
