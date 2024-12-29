@@ -36,7 +36,7 @@ urlpatterns = [
 
     path('api/project/<int:project_id>/document/', include('document.urls')),
 
-    path('api/annotation/', include('annotation.urls')),
+    path('api/project/<int:project_id>/annotation/', include('annotation.urls')),
 
     path('api/project/<int:project_id>/evaluate/', include('evaluation.urls')),
 

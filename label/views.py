@@ -7,13 +7,15 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from NLPres_backend.permissions.IsProjectCollaborator import IsProjectCollaborator
+from NLPres_backend.permissions.IsProjectOwnerOrReadOnly import IsProjectOwnerOrReadOnly
 from label.models import Label
 from label.serializers import LabelSerializer, ImportLabelSerializer, ExportLabelSerializer
 from project.models import Project
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsProjectCollaborator])
 def index(request, project_id):
     labels = Label.objects.filter(project_id=project_id)
     serializer = LabelSerializer(labels, many=True)
@@ -21,7 +23,7 @@ def index(request, project_id):
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsProjectOwnerOrReadOnly])
 def create(request, project_id):
     serializer = LabelSerializer(data=request.data, context={'project_id': project_id})
     if serializer.is_valid():
@@ -31,16 +33,17 @@ def create(request, project_id):
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsProjectOwnerOrReadOnly])
 def import_file(request, project_id):
-    serializer = ImportLabelSerializer(data=request.data,  context={'project_id': project_id})
+    serializer = ImportLabelSerializer(data=request.data, context={'project_id': project_id})
     if serializer.is_valid():
         response_data = serializer.save()
         return Response(response_data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsProjectCollaborator])
 def export(request, project_id):
     serializer = ExportLabelSerializer(data=request.data, context={'project_id': project_id})
     if serializer.is_valid():
@@ -49,8 +52,9 @@ def export(request, project_id):
         response['Content-Disposition'] = 'attachment; filename="label_config"'
         return response
 
+
 @api_view(['GET', 'PUT', 'DELETE'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsProjectOwnerOrReadOnly])
 def label_detail(request, project_id, label_id):
     try:
         project = Project.objects.get(pk=project_id)
