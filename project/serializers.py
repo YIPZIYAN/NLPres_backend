@@ -61,6 +61,7 @@ class ProjectSerializer(serializers.ModelSerializer):
         instance.description = validated_data.get('description', instance.description)
         instance.category = validated_data.get('category', instance.category)
         instance.save()
+        return instance
 
     def get_collaborators(self, obj):
         collaborators = obj.collaborator_set.all()

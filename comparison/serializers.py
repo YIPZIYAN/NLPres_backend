@@ -1,10 +1,9 @@
 import pickle
-
 from django.shortcuts import get_object_or_404
 from sklearn.metrics import precision_score, recall_score, f1_score, classification_report
 from rest_framework import serializers
-
 from comparison.models import Comparison
+from enums.ProjectCategory import ProjectCategory
 from project.models import Project
 from utility.FileProcessor import FileProcessor
 
@@ -12,8 +11,8 @@ from utility.FileProcessor import FileProcessor
 class ComparisonSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(read_only=True)
     name = serializers.CharField(required=True, max_length=100)
-    models_name = serializers.JSONField()
-    result = serializers.JSONField(required=True)
+    models_name = serializers.JSONField(required=False)
+    result = serializers.JSONField(required=False)
     updated_at = serializers.DateTimeField(read_only=True)
 
     class Meta:
@@ -29,8 +28,9 @@ class ComparisonSerializer(serializers.ModelSerializer):
 class CompareSerializer(serializers.Serializer, FileProcessor):
     first_model = serializers.FileField()
     second_model = serializers.FileField()
+    category = serializers.CharField()
     file = serializers.FileField()
-    file_format = serializers.ChoiceField(choices=['txt', 'json', 'jsonl', 'csv', 'conllu'])
+    file_format = serializers.ChoiceField(choices=['json', 'jsonl', 'csv'])
     x_test_key = serializers.CharField()
     y_test_key = serializers.CharField()
 
@@ -38,6 +38,7 @@ class CompareSerializer(serializers.Serializer, FileProcessor):
         project = get_object_or_404(Project, id=self.context.get('project_id'))
         first_model = validated_data["first_model"]
         second_model = validated_data["second_model"]
+        category = validated_data["category"]
         x_test_key = validated_data["x_test_key"]
         y_test_key = validated_data["y_test_key"]
         file = validated_data["file"]
@@ -48,7 +49,7 @@ class CompareSerializer(serializers.Serializer, FileProcessor):
         if not callable(file_reader):
             raise serializers.ValidationError(f"No reader available for file format: {file_format}")
 
-        x_test, y_test, errors = self.process_file(file, file_reader, x_test_key, y_test_key)
+        x_test, y_test, errors = self.process_file(file, file_reader, x_test_key, y_test_key, category)
 
         if x_test and y_test:
             result = self.compare(models, x_test, y_test)
@@ -83,33 +84,66 @@ class CompareSerializer(serializers.Serializer, FileProcessor):
                     "support": float(len(y_test))
                 }
 
-                result.append(report)
+                sorted_report = {k: report[k] for k in sorted(report.keys())}
+
+                result.append(sorted_report)
             except Exception as e:
                 raise serializers.ValidationError({"errors": f"Model {model_file.name} cannot be processed: {str(e)}"})
 
         return {"objects": result}
 
 
-    def process_file(self, file, file_reader, x_test_key, y_test_key):
+    def process_file(self, file, file_reader, x_test_key, y_test_key, category):
         x_test = []
         y_test = []
+        x_data = []
+        y_data = []
         errors = []
 
         try:
             dataset = file_reader(file)
+            print(dataset)
             if not dataset:
                 errors.append({file.name: "The file is empty"})
                 return x_test, y_test, errors
 
-            for line_number, data in enumerate(dataset, start=1):
-                # check conllu can process or not
-                x_data = data.get(x_test_key)
-                y_data = data.get(y_test_key)
-                if x_data and y_data:
-                    x_test.append(x_data)
-                    y_test.append(y_data)
-                else:
-                    errors.append({file.name: f"Line {line_number}: No data found for the key '{x_test_key}' and '{y_test_key}'"})
+            match category:
+                case ProjectCategory.CLASSIFICATION.value:
+                    for line_number, data in enumerate(dataset, start=1):
+                        x_test_value = data.get(x_test_key, None)
+                        y_test_value = data.get(y_test_key, None)
+
+                        if not x_test_value or not y_test_value:
+                            errors.append({file.name: f"Line {line_number}: No data found for the key '{x_test_key}' and '{y_test_key}'"})
+                            return x_test, y_test, errors
+
+                        if isinstance(x_test_value, str) and isinstance(y_test_value, str):
+                            x_test.append(x_test_value)
+                            y_test.append(y_test_value)
+
+                        else:
+                            errors.append({file.name: f"Line {line_number}: The key '{x_test_key}' or '{y_test_key}' format is unsupported"})
+
+                case ProjectCategory.SEQUENTIAL.value:
+                    for line_number, data in enumerate(dataset, start=1):
+                        x_test_value = data.get(x_test_key, None)
+                        y_test_value = data.get(y_test_key, None)
+
+                        if not x_test_value or not y_test_value:
+                            errors.append(
+                                {file.name: f"Line {line_number}: No data found for the key '{x_test_key}' and '{y_test_key}'"})
+                            return x_test, y_test, errors
+
+                        if isinstance(x_test_value, list) and isinstance(y_test_value, list):
+                            x_data.append(x_test_value)
+                            y_data.append(y_test_value)
+
+                        else:
+                            errors.append({file.name: f"Line {line_number}: The key '{x_test_key}' or '{y_test_key}' format is unsupported"})
+
+                    x_test = [token for tokens in x_data for token in tokens]
+                    y_test = [label for labels in y_data for label in labels]
+
 
         except Exception as e:
             errors.append({file.name: f"{str(e)}"})

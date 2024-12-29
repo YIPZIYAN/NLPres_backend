@@ -75,14 +75,41 @@ class ExportDocumentSerializer(serializers.Serializer, FileProcessor):
                 for document in documents:
                     annotations = Annotation.objects.filter(document=document)
                     annotations = sorted(annotations, key=lambda x: (x.start, x.end))
-                    label = [
+                    all_label = [
                         [annotation.start, annotation.end, annotation.label.name] for annotation in annotations
                     ]
 
+                    text = document.text
+                    labels = all_label
+                    tokens = []
+                    idx = 0
+
+                    prev_end = -1
+
+                    for label in labels:
+                        start, end, label_name = label
+
+                        if start != (prev_end + 1):
+                            segment = text[prev_end + 1: start]
+                            prev_end = start - 1
+                            idx, tokens = self.add_tokens(idx, tokens, segment)
+
+                        word = text[start:end + 1] if (start == end) else text[start:end]
+                        prev_end = end
+                        idx, token = self.create_token(idx, word, label_name)
+                        tokens.append(token)
+
+                    if prev_end != len(text) - 1:
+                        segment = text[prev_end + 1: len(text)]
+                        idx, tokens = self.add_tokens(idx, tokens, segment)
+
                     documents_data.append({
                         "text": document.text,
-                        "label": label,
+                        "label": all_label,
+                        "token": [token["form"] for token in tokens],
+                        "labels": [token["upostag"] for token in tokens]
                     })
+
 
         if export_as == 'csv' and project.is_category(ProjectCategory.SEQUENTIAL):
             return self.convert(documents_data, export_as, sequential=True), 'application/octet-stream'
