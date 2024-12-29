@@ -83,7 +83,7 @@ class CompareSerializer(serializers.Serializer, FileProcessor):
                     "f1-score": f1_micro,
                     "support": float(len(y_test))
                 }
-                
+
                 sorted_report = {k: report[k] for k in sorted(report.keys())}
 
                 result.append(sorted_report)
