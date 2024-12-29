@@ -7,6 +7,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from NLPres_backend.permissions.IsProjectCollaborator import IsProjectCollaborator
 from NLPres_backend.util import calculate_progress
 from document.models import Document
 from project.models import Project, Collaborator
@@ -33,7 +34,7 @@ def create(request):
 
 
 @api_view(['GET', 'PUT', 'DELETE'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated,IsProjectCollaborator])
 def project_details(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
 
