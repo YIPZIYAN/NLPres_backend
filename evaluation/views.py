@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from sklearn.metrics import cohen_kappa_score
 from statsmodels.stats.inter_rater import fleiss_kappa as fleiss_kappa_score
 
+from NLPres_backend.permissions.IsProjectCollaborator import IsProjectCollaborator
 from document.models import Annotation, Document
 from enums.ProjectCategory import ProjectCategory
 from label.models import Label
@@ -37,7 +38,6 @@ def compute_cohen_kappa(project, documents, user_ids):
 
 
 def compute_fleiss_kappa(project, documents, user_ids):
-
     categories = list(Label.objects.filter(project=project).values_list('name', flat=True))
     if not categories:
         raise ValidationError("No labels found for this project.")
@@ -58,7 +58,7 @@ def compute_fleiss_kappa(project, documents, user_ids):
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsProjectCollaborator])
 def calculate_kappa(request, project_id):
     """
     API endpoint to calculate Cohen's Kappa or Fleiss' Kappa.

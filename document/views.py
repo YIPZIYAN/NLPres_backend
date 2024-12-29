@@ -10,6 +10,8 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from NLPres_backend.permissions.IsProjectCollaborator import IsProjectCollaborator
+from NLPres_backend.permissions.IsProjectOwnerOrReadOnly import IsProjectOwnerOrReadOnly
 from NLPres_backend.util import calculate_progress
 from document.models import Document, Annotation
 from document.serializers import DocumentSerializer, ImportDocumentSerializer, ExportDocumentSerializer
@@ -18,7 +20,7 @@ from project.models import Project
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsProjectCollaborator])
 def index(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
     documents = Document.objects.filter(project=project)
@@ -29,7 +31,7 @@ def index(request, project_id):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsProjectCollaborator])
 def pagination(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
     documents = Document.objects.filter(project=project)
@@ -46,7 +48,7 @@ def pagination(request, project_id):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsProjectCollaborator])
 def progress(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
     progress_data = calculate_progress(request.user, project)
@@ -54,7 +56,7 @@ def progress(request, project_id):
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsProjectOwnerOrReadOnly])
 def create(request, project_id):
     serializer = ImportDocumentSerializer(data=request.data, context={'project_id': project_id})
     if serializer.is_valid():
@@ -64,7 +66,7 @@ def create(request, project_id):
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsProjectCollaborator])
 def export(request, project_id):
     serializer = ExportDocumentSerializer(data=request.data, context={'project_id': project_id, 'request': request})
     if serializer.is_valid():
@@ -77,7 +79,7 @@ def export(request, project_id):
 
 
 @api_view(['GET', 'PUT', 'DELETE'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsProjectOwnerOrReadOnly])
 def document_details(request, project_id, document_id):
     project = get_object_or_404(Project, pk=project_id)
     document = get_object_or_404(Document, project=project, pk=document_id)
@@ -86,7 +88,7 @@ def document_details(request, project_id, document_id):
         return Response(DocumentSerializer(document, context={'request': request}).data)
 
     elif request.method == 'PUT':
-        serializer = DocumentSerializer(document,data=request.data)
+        serializer = DocumentSerializer(document, data=request.data)
         if serializer.is_valid():
             serializer.save(project_id=project_id)
             if project.category == ProjectCategory.SEQUENTIAL.value:
@@ -100,7 +102,7 @@ def document_details(request, project_id, document_id):
 
 
 @api_view(['DELETE'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsProjectCollaborator])
 def clear_label(request, project_id, document_id):
     project = get_object_or_404(Project, pk=project_id)
     document = get_object_or_404(Document, pk=document_id, project=project)

@@ -4,13 +4,14 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from NLPres_backend.permissions.IsProjectCollaborator import IsProjectCollaborator
 from annotation.serializers import AnnotationSerializer
 from document.models import Annotation
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def create(request):
+@permission_classes([IsAuthenticated, IsProjectCollaborator])
+def create(request, project_id):
     def process_data(data, many):
         serializer = AnnotationSerializer(data=data, many=many, context={'request': request})
         if serializer.is_valid():
@@ -26,9 +27,9 @@ def create(request):
     return process_data(request.data, many=False)
 
 
-@api_view(['GET','PUT','DELETE'])
-@permission_classes([IsAuthenticated])
-def annotation_detail(request, pk):
+@api_view(['GET', 'PUT', 'DELETE'])
+@permission_classes([IsAuthenticated, IsProjectCollaborator])
+def annotation_detail(request, project_id, pk):
     annotation = get_object_or_404(Annotation, pk=pk)
 
     if request.method == 'GET':

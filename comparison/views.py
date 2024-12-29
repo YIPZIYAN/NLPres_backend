@@ -3,13 +3,14 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from NLPres_backend.permissions.IsProjectCollaborator import IsProjectCollaborator
 from comparison.models import Comparison
 from comparison.serializers import CompareSerializer, ComparisonSerializer
 from project.models import Project
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsProjectCollaborator])
 def index(request, project_id):
     comparisons = Comparison.objects.filter(project_id=project_id)
     serializer = ComparisonSerializer(comparisons, many=True)
@@ -17,7 +18,7 @@ def index(request, project_id):
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsProjectCollaborator])
 def compare(request, project_id):
     serializer = CompareSerializer(data=request.data, context={'project_id': project_id})
     if serializer.is_valid():
@@ -27,7 +28,7 @@ def compare(request, project_id):
 
 
 @api_view(['GET', 'PUT', 'DELETE'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsProjectCollaborator])
 def comparison_detail(request, project_id, comparison_id):
     try:
         project = Project.objects.get(pk=project_id)
