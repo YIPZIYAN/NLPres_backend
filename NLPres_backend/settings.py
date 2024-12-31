@@ -25,9 +25,11 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 SECRET_KEY = 'django-insecure-d5jsv4z_+9qetk-h3z!n-2ymo8vd_-1k8w4e^gs%o$t0qjhl4('
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+     '10.123.51.100'
+]
 
 # Application definition
 
@@ -71,9 +73,9 @@ SIMPLE_JWT = {
 SITE_ID = 1
 
 MIDDLEWARE = [
-    "corsheaders.middleware.CorsMiddleware",
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -83,8 +85,7 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
+    "http://10.123.51.100",  # Add your frontend's origin
 ]
 
 REST_AUTH = {
@@ -188,3 +189,5 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+import os
+STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
