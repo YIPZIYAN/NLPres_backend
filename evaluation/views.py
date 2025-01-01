@@ -5,56 +5,14 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from sklearn.metrics import cohen_kappa_score
-from statsmodels.stats.inter_rater import fleiss_kappa as fleiss_kappa_score
+from scipy.constants import value
 
 from NLPres_backend.permissions.IsProjectCollaborator import IsProjectCollaborator
-from document.models import Annotation, Document
+from document.models import Document
+from enums.EvaluationMethod import EvaluationMethod
 from enums.ProjectCategory import ProjectCategory
-from label.models import Label
+from evaluation.classes.EvaluationFactory import KappaFactory
 from project.models import Project
-
-
-def compute_cohen_kappa(project, documents, user_ids):
-    # Initialize annotators list
-    annotators = [[] for _ in range(2)]
-
-    # Retrieve annotations for each document and user
-    for doc in documents:
-        for idx, user_id in enumerate(user_ids):
-            annotations = Annotation.objects.filter(document=doc, user_id=user_id).select_related("label")
-            if not annotations.exists():
-                raise ValidationError(f"No annotations found for user {user_id} in document {doc.id}.")
-
-            label = annotations.first().label.name
-            annotators[idx].append(label)
-
-    # Check for consistent annotation counts
-    if len(annotators[0]) != len(annotators[1]):
-        raise ValidationError("Mismatch in annotation counts between users.")
-
-    # Compute Cohen's Kappa
-    return cohen_kappa_score(annotators[0], annotators[1])
-
-
-def compute_fleiss_kappa(project, documents, user_ids):
-    categories = list(Label.objects.filter(project=project).values_list('name', flat=True))
-    if not categories:
-        raise ValidationError("No labels found for this project.")
-
-    ratings_matrix = []
-    for doc in documents:
-        annotations = Annotation.objects.filter(document=doc, user_id__in=user_ids).select_related("label")
-        if not annotations.exists():
-            raise ValidationError(f"No annotations found for document ID {doc.id}.")
-
-        label_counts = [annotations.filter(label__name=category).count() for category in categories]
-        ratings_matrix.append(label_counts)
-
-    try:
-        return fleiss_kappa_score(ratings_matrix)
-    except:
-        raise ValidationError("Fleiss Kappa score matrix is invalid or empty.")
 
 
 @api_view(['POST'])
@@ -90,13 +48,15 @@ def calculate_kappa(request, project_id):
     if not documents.exists():
         raise ValidationError("No documents found for this project.")
 
-    # Dynamically call the appropriate function
-    kappa_function_map = {
-        "cohen": compute_cohen_kappa,
-        "fleiss": compute_fleiss_kappa,
+    factory = KappaFactory(project, documents, user_ids)
+    kappa_computation = factory.create_kappa_computation(ProjectCategory.from_value(project.category).value)
+
+    method_function_map = {
+        EvaluationMethod.COHEN.value: kappa_computation.cohen_kappa,
+        EvaluationMethod.FLEISS.value: kappa_computation.fleiss_kappa,
     }
 
-    kappa_function = kappa_function_map[method]
-    kappa = kappa_function(project, documents, user_ids)
+    # Call the appropriate kappa computation method
+    kappa = method_function_map[method]()
 
     return Response({"method": method, "kappa": kappa}, status=status.HTTP_200_OK)
