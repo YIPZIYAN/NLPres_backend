@@ -25,10 +25,11 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 SECRET_KEY = 'django-insecure-d5jsv4z_+9qetk-h3z!n-2ymo8vd_-1k8w4e^gs%o$t0qjhl4('
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = [
-     '10.123.51.100'
+     '10.123.51.100', # deployment
+     '127.0.0.1' # development
 ]
 
 # Application definition
@@ -84,8 +85,10 @@ MIDDLEWARE = [
     "allauth.account.middleware.AccountMiddleware",
 ]
 
+# Add your Frontend's origin
 CORS_ALLOWED_ORIGINS = [
-    "http://10.123.51.100",  # Add your frontend's origin
+    "http://10.123.51.100", # Deployment
+    "http://127.0.0.1:3001" # Development
 ]
 
 REST_AUTH = {
