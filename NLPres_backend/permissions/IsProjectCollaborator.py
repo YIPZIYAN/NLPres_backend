@@ -15,4 +15,4 @@ class IsProjectCollaborator(BasePermission):
             return False
 
         project = get_object_or_404(Project, pk=project_id)
-        return project.collaborator_set.filter(user=request.user).exists()
+        return project.collaborator_set.filter(user=request.user, joined_at__isnull=False).exists()

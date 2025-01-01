@@ -1,6 +1,9 @@
+import uuid
 from random import choices
 
+from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
+from django.urls import reverse
 from rest_framework import serializers
 
 from enums.Role import Role
@@ -13,10 +16,11 @@ class CollaboratorSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     role = serializers.CharField(required=True)
     user_id = serializers.IntegerField(write_only=True)
+    joined_at = serializers.DateTimeField(required=False)
 
     class Meta:
         model = Collaborator
-        fields = ['id','user','role','user_id']
+        fields = ['id','user','role','user_id', 'joined_at']
 
     def create(self, validated_data):
         project_id = self.context.get('project_id')
@@ -24,7 +28,16 @@ class CollaboratorSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"project_id": "This field is required."})
 
         project = get_object_or_404(Project, id=project_id)
-        return Collaborator.objects.create(project=project, **validated_data)
+        collaborator = Collaborator.objects.create(project=project, **validated_data)
+
+        send_mail(
+            subject='You are invited to collaborate on a project',
+            message=f'Click the link to view the invitation: ',
+            from_email='noreply@nlpres.com',
+            recipient_list=[collaborator.user.username]
+        )
+
+        return collaborator
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
@@ -52,7 +65,8 @@ class ProjectSerializer(serializers.ModelSerializer):
 
         Collaborator.objects.create(project=project,
                                     user=self.context['request'].user,
-                                    role=Role.OWNER.value)
+                                    role=Role.OWNER.value,
+                                    joined_at=project.created_at)
 
         return project
 

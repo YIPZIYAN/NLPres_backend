@@ -18,6 +18,6 @@ class IsProjectOwnerOrReadOnly(BasePermission):
 
         project = get_object_or_404(Project, pk=project_id)
         if request.method in permissions.SAFE_METHODS:
-            return project.collaborator_set.filter(user=request.user).exists()
+            return project.collaborator_set.filter(user=request.user, joined_at__isnull=False).exists()
 
         return project.collaborator_set.filter(user=request.user, role=Role.OWNER.value).exists()
