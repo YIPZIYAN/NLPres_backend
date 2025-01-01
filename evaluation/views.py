@@ -40,8 +40,6 @@ def calculate_kappa(request, project_id):
 
     # Get the project
     project = get_object_or_404(Project, pk=project_id)
-    if not project.category == ProjectCategory.CLASSIFICATION.value:
-        raise ValidationError("Project category is not classification.")
 
     # Get documents
     documents = Document.objects.filter(project=project)
