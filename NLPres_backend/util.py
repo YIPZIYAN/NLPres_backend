@@ -12,3 +12,9 @@ def calculate_progress(user, project):
         'completed': completed_count,
         'pending': pending_count,
     }
+
+def unflatten(list_of_str):
+    return [labels.split(" ") for labels in list_of_str]
+
+def flatten(list_of_list_of_str):
+    return [label for label_list in list_of_list_of_str for label in label_list]

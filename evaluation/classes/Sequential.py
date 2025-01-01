@@ -1,5 +1,6 @@
 from sklearn.metrics import cohen_kappa_score
 
+from NLPres_backend.util import flatten
 from document.models import Annotation
 from evaluation.classes.BaseEvaluation import BaseEvaluation
 from evaluation.interfaces.EvaluationInterface import EvaluationInterface
@@ -50,8 +51,9 @@ class Sequential(BaseEvaluation):
                 Sequential.annotators[i].append(token["upostag"] for token in tokens)
 
     def cohen_kappa(self):
-        y1 = Sequential.annotators[0]
-        y2 = Sequential.annotators[1]
+
+        y1 = flatten(Sequential.annotators[0])
+        y2 = flatten(Sequential.annotators[1])
         return cohen_kappa_score(y1, y2)
 
     def fleiss_kappa(self):
