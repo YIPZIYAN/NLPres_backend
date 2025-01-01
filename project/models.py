@@ -1,3 +1,5 @@
+import uuid
+
 from django.contrib.auth.models import User
 from django.db import models
 
@@ -25,6 +27,7 @@ class Collaborator(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     role = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
+    joined_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         db_table = 'collaborators'

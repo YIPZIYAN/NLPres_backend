@@ -1,4 +1,5 @@
 from django.shortcuts import get_object_or_404
+from django.utils.timezone import now
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -68,7 +69,7 @@ def completed_collaborators(request, project_id):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated, IsProjectOwnerOrReadOnly])
 def collaborator_create(request, project_id):
-    serializer = CollaboratorSerializer(data=request.data, context={'project_id': project_id})
+    serializer = CollaboratorSerializer(data=request.data, context={'request': request, 'project_id': project_id})
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -101,3 +102,26 @@ def collaborator_quit(request, project_id):
 
     collaborator.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def accept_invitation(request, project_id):
+    collaborator = get_object_or_404(Collaborator, user=request.user, project_id=project_id)
+
+    if collaborator.joined_at is not None:
+        return Response({"detail": "Invitation already accepted."}, status=status.HTTP_400_BAD_REQUEST)
+
+    collaborator.joined_at = now()
+    collaborator.save()
+
+    return Response({"detail": "Invitation accepted successfully."}, status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def decline_invitation(request, project_id):
+    collaborator = get_object_or_404(Collaborator, user=request.user, project_id=project_id)
+
+    collaborator.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+

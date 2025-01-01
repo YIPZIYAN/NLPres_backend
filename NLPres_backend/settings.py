@@ -121,10 +121,13 @@ TEMPLATES = [
     },
 ]
 
-EMAIL_HOST = 'sandbox.smtp.mailtrap.io'
-EMAIL_HOST_USER = '474145c7c9e25c'
-EMAIL_HOST_PASSWORD = '35eeb66b8f0dec'
-EMAIL_PORT = '2525'
+EMAIL_BACKEND='django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST_USER = 'noreply.nlpres@gmail.com'
+EMAIL_HOST_PASSWORD = 'cmap kaam xucu afwt'
+EMAIL_PORT = '587'
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_MAX_EMAIL_ADDRESSES = 1
 ACCOUNT_AUTHENTICATION_METHOD = 'email'

@@ -73,7 +73,7 @@ class ExportDocumentSerializer(serializers.Serializer, FileProcessor):
                 documents_data = []
                 print(documents)
                 for document in documents:
-                    annotations = Annotation.objects.filter(document=document)
+                    annotations = Annotation.objects.filter(document=document, user=user)
                     annotations = sorted(annotations, key=lambda x: (x.start, x.end))
                     all_label = [
                         [annotation.start, annotation.end, annotation.label.name] for annotation in annotations
