@@ -1,7 +1,7 @@
 from rest_framework.exceptions import ValidationError
 from sklearn.metrics import cohen_kappa_score
 
-from NLPres_backend.util import flatten
+from NLPres_backend.util import flatten, compute_ratings_matrix
 from document.models import Annotation
 from evaluation.classes.BaseEvaluation import BaseEvaluation
 from statsmodels.stats.inter_rater import fleiss_kappa as fleiss_kappa_score
@@ -67,16 +67,13 @@ class Sequential(BaseEvaluation):
             flatten_annotator = flatten(annotator)
             data.append(flatten_annotator)
 
-
         data = list(map(list, zip(*data)))
 
-        ratings_matrix = []
-        for item in data:
-            counts = [item.count(category) for category in categories]
-            ratings_matrix.append(counts)
+        ratings_matrix = compute_ratings_matrix(categories, data)
 
-        print(ratings_matrix)
         try:
             return fleiss_kappa_score(ratings_matrix)
         except:
             raise ValidationError("Fleiss Kappa score matrix is invalid or empty.")
+
+
