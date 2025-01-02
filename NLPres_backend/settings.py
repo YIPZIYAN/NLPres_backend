@@ -88,7 +88,7 @@ MIDDLEWARE = [
 # Add your Frontend's origin
 CORS_ALLOWED_ORIGINS = [
     "http://10.123.51.100", # Deployment
-    "http://127.0.0.1:3005" # Development
+    "http://127.0.0.1:3001" # Development
 ]
 
 REST_AUTH = {
