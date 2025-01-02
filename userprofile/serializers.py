@@ -1,3 +1,4 @@
+from allauth.account.models import EmailAddress
 from dj_rest_auth.serializers import UserDetailsSerializer
 from dj_rest_auth.registration.serializers import RegisterSerializer
 from rest_framework import serializers
@@ -7,13 +8,23 @@ from userprofile.models import CustomUser
 
 class UserSerializer(UserDetailsSerializer):
     avatar = serializers.ImageField(allow_null=True, required=False)
+    is_verified = serializers.BooleanField(source='get_email_verified', read_only=True)
 
     class Meta(UserDetailsSerializer.Meta):
         model = CustomUser
-        fields = UserDetailsSerializer.Meta.fields + ('avatar',)
+        fields = UserDetailsSerializer.Meta.fields + ('avatar','is_verified')
+
+    def get_email_verified(self, obj):
+        # Get the email address linked to the user
+        email_address = EmailAddress.objects.filter(user=obj, primary=True).first()
+        if email_address:
+            return email_address.verified
+        return False
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
+        representation['is_verified'] = self.get_email_verified(instance)
+
         request = self.context.get('request', None)
 
         if request and instance.avatar:

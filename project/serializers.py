@@ -32,7 +32,7 @@ class CollaboratorSerializer(serializers.ModelSerializer):
 
         send_mail(
             subject='You are invited to collaborate on a project',
-            message=f'Click the link to view the invitation: ',
+            message=f'Click the link to view the invitation: http://10.123.51.100/project',
             from_email='noreply@nlpres.com',
             recipient_list=[collaborator.user.username]
         )
