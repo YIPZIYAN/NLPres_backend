@@ -1,20 +1,23 @@
+from rest_framework.exceptions import ValidationError
 from sklearn.metrics import cohen_kappa_score
 
 from NLPres_backend.util import flatten
 from document.models import Annotation
 from evaluation.classes.BaseEvaluation import BaseEvaluation
-from evaluation.interfaces.EvaluationInterface import EvaluationInterface
+from statsmodels.stats.inter_rater import fleiss_kappa as fleiss_kappa_score
+from label.models import Label
 from utility.FileProcessor import FileProcessor
 
 
 class Sequential(BaseEvaluation):
     document_data = []
     label_data = []
-    annotators = [[] for _ in range(2)]
+    annotators = None
 
     def __init__(self, project, documents, user_ids: list):
         super().__init__(project, documents, user_ids)
         file_processor = FileProcessor()
+        self.annotators = [[] for _ in range(len(user_ids))]
 
         for document in self.documents:
             for i, user_id in enumerate(self.user_ids):
@@ -48,13 +51,32 @@ class Sequential(BaseEvaluation):
                     segment = text[prev_end + 1: len(text)]
                     idx, tokens = file_processor.add_tokens(idx, tokens, segment)
 
-                Sequential.annotators[i].append(token["upostag"] for token in tokens)
+                self.annotators[i].append(token["upostag"] for token in tokens)
 
     def cohen_kappa(self):
-
-        y1 = flatten(Sequential.annotators[0])
-        y2 = flatten(Sequential.annotators[1])
+        y1 = flatten(self.annotators[0])
+        y2 = flatten(self.annotators[1])
         return cohen_kappa_score(y1, y2)
 
     def fleiss_kappa(self):
-        pass
+        categories = list(Label.objects.filter(project=self.project).values_list('name', flat=True))
+        categories.append('_')
+        data = []
+
+        for annotator in self.annotators:
+            flatten_annotator = flatten(annotator)
+            data.append(flatten_annotator)
+
+
+        data = list(map(list, zip(*data)))
+
+        ratings_matrix = []
+        for item in data:
+            counts = [item.count(category) for category in categories]
+            ratings_matrix.append(counts)
+
+        print(ratings_matrix)
+        try:
+            return fleiss_kappa_score(ratings_matrix)
+        except:
+            raise ValidationError("Fleiss Kappa score matrix is invalid or empty.")

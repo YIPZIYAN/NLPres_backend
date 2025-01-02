@@ -4,7 +4,6 @@ from statsmodels.stats.inter_rater import fleiss_kappa as fleiss_kappa_score
 
 from document.models import Annotation
 from evaluation.classes.BaseEvaluation import BaseEvaluation
-from evaluation.interfaces.EvaluationInterface import EvaluationInterface
 from label.models import Label
 
 
